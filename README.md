@@ -1,1 +1,1 @@
-# DOBEST SALARY PRO V4 (Cloud Sync)\nTích hợp Google Firebase Realtime Database.
+# DOBEST SALARY PRO V5 (Mobile & Multi-User Admin)\nQuản lý đa nhân sự lưu Firebase. Giao diện iPhone tối ưu.
