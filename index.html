@@ -7,20 +7,18 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Firebase SDKs (Compat version for simple HTML integration) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
           colors: {
-            brand: {
-              50: '#eff6ff',
-              100: '#dbeafe',
-              500: '#3b82f6',
-              600: '#2563eb',
-              700: '#1d4ed8',
-              900: '#1e3a8a',
-            }
+            brand: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 900: '#1e3a8a' }
           }
         }
       }
@@ -32,20 +30,10 @@
     @media print {
       body * { visibility: hidden; }
       #printable-payslip, #printable-payslip * { visibility: visible; }
-      #printable-payslip {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        box-shadow: none !important;
-        border: none !important;
-      }
+      #printable-payslip { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none !important; border: none !important; }
       .no-print { display: none !important; }
     }
-    input[type="number"]::-webkit-inner-spin-button,
-    input[type="number"]::-webkit-outer-spin-button {
-      opacity: 1;
-    }
+    input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { opacity: 1; }
   </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
@@ -54,53 +42,32 @@
   <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur border-b border-slate-200 dark:border-slate-800 no-print">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-blue-500/20">
-          DB
-        </div>
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-blue-500/20">DB</div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-              DOBEST SALARY PRO
-            </h1>
-            <span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-semibold">
-              DB0351
-            </span>
+            <h1 class="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">DOBEST SALARY PRO <span class="text-xs bg-emerald-500 text-white px-2 py-0.5 rounded-full relative -top-1">V4 Cloud</span></h1>
           </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400">
-            Phạm Ngọc Hải (范玉海) • Bảng chấm công bóc tách Ca Ngày & Ca Đêm (20h-22h & 22h-5h)
-          </p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Phạm Ngọc Hải (DB0351) • Tự động đồng bộ Đám mây (Firebase)</p>
         </div>
       </div>
 
-      <!-- Month Selector & Actions -->
       <div class="flex flex-wrap items-center gap-2">
+        <!-- Trạng thái đồng bộ -->
+        <div id="syncStatusWrapper" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300" title="Trạng thái lưu trữ">
+          <span id="syncStatusIcon"><i data-lucide="cloud-cog" class="w-4 h-4 text-slate-400 animate-pulse"></i></span>
+          <span id="syncStatusText" class="hidden sm:inline">Đang kết nối...</span>
+        </div>
+
         <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg px-2.5 py-1.5 border border-slate-200 dark:border-slate-700">
           <i data-lucide="calendar" class="w-4 h-4 text-blue-600 dark:text-blue-400 mr-2"></i>
-          <input
-            type="month"
-            id="monthPicker"
-            value="2026-09"
-            class="bg-transparent text-sm font-semibold outline-none cursor-pointer"
-          />
+          <input type="month" id="monthPicker" value="2026-09" class="bg-transparent text-sm font-semibold outline-none cursor-pointer" />
         </div>
 
         <button onclick="exportCSV()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition">
-          <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
-          <span>Xuất Excel</span>
+          <i data-lucide="file-spreadsheet" class="w-4 h-4"></i><span class="hidden sm:inline">Xuất Excel</span>
         </button>
 
-        <button onclick="exportBackup()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition" title="Sao lưu dữ liệu JSON">
-          <i data-lucide="download" class="w-4 h-4"></i>
-          <span class="hidden sm:inline">Sao lưu</span>
-        </button>
-
-        <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition cursor-pointer" title="Khôi phục dữ liệu JSON">
-          <i data-lucide="upload" class="w-4 h-4"></i>
-          <span class="hidden sm:inline">Khôi phục</span>
-          <input type="file" id="importFile" accept=".json" class="hidden" onchange="importBackup(event)" />
-        </label>
-
-        <button onclick="toggleDarkMode()" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition" title="Đổi giao diện Sáng/Tối">
+        <button onclick="toggleDarkMode()" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition">
           <i data-lucide="moon" class="w-4 h-4"></i>
         </button>
       </div>
@@ -108,510 +75,210 @@
 
     <!-- Navigation Tabs -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 flex gap-1 overflow-x-auto border-t border-slate-100 dark:border-slate-800/80 pt-1">
-      <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 flex items-center gap-2 whitespace-nowrap">
-        <i data-lucide="calculator" class="w-4 h-4"></i> Bảng Tính Lương
-      </button>
-      <button onclick="switchTab('calendar')" id="tab-btn-calendar" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 whitespace-nowrap">
-        <i data-lucide="calendar-check-2" class="w-4 h-4"></i> Lịch Chấm Công Ngày
-      </button>
-      <button onclick="switchTab('payslip')" id="tab-btn-payslip" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 whitespace-nowrap">
-        <i data-lucide="file-text" class="w-4 h-4"></i> Phiếu Lương DOBEST (In/PDF)
-      </button>
-      <button onclick="switchTab('analytics')" id="tab-btn-analytics" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 whitespace-nowrap">
-        <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Phân Tích & Mục Tiêu
-      </button>
+      <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 flex items-center gap-2 whitespace-nowrap"><i data-lucide="calculator" class="w-4 h-4"></i> Bảng Tính Lương</button>
+      <button onclick="switchTab('calendar')" id="tab-btn-calendar" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 whitespace-nowrap"><i data-lucide="calendar-check-2" class="w-4 h-4"></i> Lịch Chấm Công Ngày</button>
+      <button onclick="switchTab('payslip')" id="tab-btn-payslip" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 whitespace-nowrap"><i data-lucide="file-text" class="w-4 h-4"></i> Phiếu Lương DOBEST (In/PDF)</button>
+      <button onclick="switchTab('analytics')" id="tab-btn-analytics" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 whitespace-nowrap"><i data-lucide="bar-chart-3" class="w-4 h-4"></i> Phân Tích & Mục Tiêu</button>
     </div>
   </header>
 
   <!-- Main Content -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-
     <!-- KPI Summary Cards -->
     <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 no-print">
       <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-        <div class="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
-          <span>THỰC LĨNH (NET)</span>
-          <span class="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
-            <i data-lucide="wallet" class="w-4 h-4"></i>
-          </span>
-        </div>
-        <div id="kpi-net" class="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
-          12.114.038 ₫
-        </div>
-        <div id="kpi-net-sub" class="text-xs text-slate-400 mt-1">
-          Đã trừ BHXH 630.000 ₫
-        </div>
+        <div class="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400"><span>THỰC LĨNH (NET)</span><span class="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400"><i data-lucide="wallet" class="w-4 h-4"></i></span></div>
+        <div id="kpi-net" class="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">0 ₫</div>
+        <div id="kpi-net-sub" class="text-xs text-slate-400 mt-1">Đã trừ BHXH 0 ₫</div>
       </div>
-
       <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-        <div class="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
-          <span>TỔNG LƯƠNG (GROSS)</span>
-          <span class="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">
-            <i data-lucide="trending-up" class="w-4 h-4"></i>
-          </span>
-        </div>
-        <div id="kpi-gross" class="text-xl sm:text-2xl font-extrabold text-blue-600 dark:text-blue-400 mt-1">
-          12.744.038 ₫
-        </div>
-        <div id="kpi-gross-sub" class="text-xs text-slate-400 mt-1">
-          Lương giờ công: 10.024.038 ₫
-        </div>
+        <div class="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400"><span>TỔNG LƯƠNG (GROSS)</span><span class="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"><i data-lucide="trending-up" class="w-4 h-4"></i></span></div>
+        <div id="kpi-gross" class="text-xl sm:text-2xl font-extrabold text-blue-600 dark:text-blue-400 mt-1">0 ₫</div>
+        <div id="kpi-gross-sub" class="text-xs text-slate-400 mt-1">Lương giờ công: 0 ₫</div>
       </div>
-
       <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-        <div class="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
-          <span>TỔNG GIỜ TĂNG CA & CN</span>
-          <span class="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400">
-            <i data-lucide="clock" class="w-4 h-4"></i>
-          </span>
-        </div>
-        <div id="kpi-ot-hours" class="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">
-          84.0 giờ
-        </div>
-        <div id="kpi-ot-money" class="text-xs text-slate-400 mt-1">
-          Thu nhập OT/CN: 4.024.038 ₫
-        </div>
+        <div class="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400"><span>TỔNG GIỜ TĂNG CA & CN</span><span class="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400"><i data-lucide="clock" class="w-4 h-4"></i></span></div>
+        <div id="kpi-ot-hours" class="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">0.0 giờ</div>
+        <div id="kpi-ot-money" class="text-xs text-slate-400 mt-1">Thu nhập OT/CN: 0 ₫</div>
       </div>
-
       <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-        <div class="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
-          <span>TỔNG PHỤ CẤP & THƯỞNG</span>
-          <span class="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400">
-            <i data-lucide="award" class="w-4 h-4"></i>
-          </span>
-        </div>
-        <div id="kpi-allowance" class="text-xl sm:text-2xl font-extrabold text-purple-600 dark:text-purple-400 mt-1">
-          2.720.000 ₫
-        </div>
-        <div id="kpi-leave-remain" class="text-xs text-slate-400 mt-1">
-          Phép tồn: 1.00 ngày • Đơn giá: 28.846 ₫/h
-        </div>
+        <div class="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400"><span>TỔNG PHỤ CẤP & THƯỞNG</span><span class="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400"><i data-lucide="award" class="w-4 h-4"></i></span></div>
+        <div id="kpi-allowance" class="text-xl sm:text-2xl font-extrabold text-purple-600 dark:text-purple-400 mt-1">0 ₫</div>
+        <div id="kpi-leave-remain" class="text-xs text-slate-400 mt-1">Phép tồn: 0.00 ngày • Đơn giá: 0 ₫/h</div>
       </div>
     </section>
 
-    <!-- TAB 1: DASHBOARD / CALCULATOR -->
+    <!-- TAB 1: DASHBOARD -->
     <section id="tab-dashboard" class="space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-        <!-- Left Column: Working Hours Input (7 cols) -->
         <div class="lg:col-span-7 space-y-6">
-          <!-- Base Configuration Card -->
           <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-              <h2 class="text-base font-bold flex items-center gap-2 text-slate-900 dark:text-white">
-                <i data-lucide="sliders" class="w-5 h-5 text-blue-600"></i>
-                Thông Số Cơ Bản & Nhân Viên
-              </h2>
-              <button onclick="resetToSampleSep2026()" class="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1">
-                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Nạp mẫu Tháng 09/2026
-              </button>
-            </div>
-
+            <h2 class="text-base font-bold flex items-center gap-2 text-slate-900 dark:text-white mb-4"><i data-lucide="sliders" class="w-5 h-5 text-blue-600"></i> Thông Số Cơ Bản & Nhân Viên</h2>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div>
-                <label class="block text-xs font-medium text-slate-500 mb-1">Họ tên 姓名</label>
-                <input type="text" id="empName" value="Phạm Ngọc Hải 范玉海" oninput="saveAndCalc()" class="w-full px-3 py-2 text-sm font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500" />
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-slate-500 mb-1">Mã NV 工号</label>
-                <input type="text" id="empId" value="DB0351" oninput="saveAndCalc()" class="w-full px-3 py-2 text-sm font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500" />
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-slate-500 mb-1">Lương cơ bản (VNĐ)</label>
-                <input type="number" id="baseSalary" value="6000000" step="100000" oninput="saveAndCalc()" class="w-full px-3 py-2 text-sm font-bold text-blue-600 dark:text-blue-400 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500" />
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-slate-500 mb-1">Giờ công chuẩn</label>
-                <input type="number" id="standardHours" value="208" oninput="saveAndCalc()" class="w-full px-3 py-2 text-sm font-bold rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500" />
-              </div>
+              <div><label class="block text-xs font-medium text-slate-500 mb-1">Họ tên 姓名</label><input type="text" id="empName" oninput="saveAndCalc()" class="w-full px-3 py-2 text-sm font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" /></div>
+              <div><label class="block text-xs font-medium text-slate-500 mb-1">Mã NV 工号</label><input type="text" id="empId" oninput="saveAndCalc()" class="w-full px-3 py-2 text-sm font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" /></div>
+              <div><label class="block text-xs font-medium text-slate-500 mb-1">Lương cơ bản (VNĐ)</label><input type="number" id="baseSalary" step="100000" oninput="saveAndCalc()" class="w-full px-3 py-2 text-sm font-bold text-blue-600 dark:text-blue-400 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" /></div>
+              <div><label class="block text-xs font-medium text-slate-500 mb-1">Giờ công chuẩn</label><input type="number" id="standardHours" oninput="saveAndCalc()" class="w-full px-3 py-2 text-sm font-bold rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" /></div>
             </div>
           </div>
-
-          <!-- Official Hours Card -->
           <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-              <div>
-                <h2 class="text-base font-bold flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
-                  <i data-lucide="briefcase" class="w-5 h-5"></i>
-                  Giờ Công Chính Thức (100% Đơn Giá)
-                </h2>
-                <p class="text-xs text-slate-500 mt-0.5">Nhập số giờ hoặc đồng bộ tự động từ tab Lịch Chấm Công</p>
-              </div>
-              <span id="officialSubtotalBadge" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
-                10.024.038 ₫
-              </span>
+            <div class="flex items-center justify-between gap-2 mb-4">
+              <h2 class="text-base font-bold flex items-center gap-2 text-indigo-600 dark:text-indigo-400"><i data-lucide="briefcase" class="w-5 h-5"></i> Giờ Công Chính Thức (100%)</h2>
+              <span id="officialSubtotalBadge" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">0 ₫</span>
             </div>
-
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="text-xs text-slate-400 border-b border-slate-100 dark:border-slate-800">
-                    <th class="text-left py-2 font-semibold">Khoản mục giờ công</th>
-                    <th class="text-right py-2 font-semibold w-24">Đơn giá/h</th>
-                    <th class="text-right py-2 font-semibold w-28">Số giờ</th>
-                    <th class="text-right py-2 font-semibold w-32">Thành tiền</th>
-                  </tr>
-                </thead>
-                <tbody id="officialHoursBody" class="divide-y divide-slate-100 dark:divide-slate-800/60">
-                </tbody>
-              </table>
-            </div>
+            <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 border-b border-slate-100 dark:border-slate-800"><th class="text-left py-2">Khoản mục</th><th class="text-right py-2 w-24">Đơn giá/h</th><th class="text-right py-2 w-28">Số giờ</th><th class="text-right py-2 w-32">Thành tiền</th></tr></thead><tbody id="officialHoursBody" class="divide-y divide-slate-100 dark:divide-slate-800/60"></tbody></table></div>
           </div>
-
-          <!-- Probation Hours Accordion -->
           <details class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm group">
-            <summary class="p-5 cursor-pointer list-none flex items-center justify-between font-bold text-sm text-slate-700 dark:text-slate-200">
-              <span class="flex items-center gap-2">
-                <i data-lucide="user-check" class="w-5 h-5 text-amber-500"></i>
-                Giờ Công Thử Việc (85% Đơn Giá - Bấm để mở rộng nếu có)
-              </span>
-              <span id="probationSubtotalBadge" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                0 ₫
-              </span>
-            </summary>
-            <div class="px-5 pb-5 pt-2 border-t border-slate-100 dark:border-slate-800 overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="text-xs text-slate-400 border-b border-slate-100 dark:border-slate-800">
-                    <th class="text-left py-2 font-semibold">Khoản mục thử việc</th>
-                    <th class="text-right py-2 font-semibold w-24">Đơn giá/h</th>
-                    <th class="text-right py-2 font-semibold w-28">Số giờ</th>
-                    <th class="text-right py-2 font-semibold w-32">Thành tiền</th>
-                  </tr>
-                </thead>
-                <tbody id="probationHoursBody" class="divide-y divide-slate-100 dark:divide-slate-800/60">
-                </tbody>
-              </table>
-            </div>
+            <summary class="p-5 cursor-pointer list-none flex items-center justify-between font-bold text-sm text-slate-700 dark:text-slate-200"><span class="flex items-center gap-2"><i data-lucide="user-check" class="w-5 h-5 text-amber-500"></i> Giờ Công Thử Việc (85%)</span><span id="probationSubtotalBadge" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">0 ₫</span></summary>
+            <div class="px-5 pb-5 pt-2 border-t border-slate-100 dark:border-slate-800 overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 border-b border-slate-100 dark:border-slate-800"><th class="text-left py-2">Khoản mục</th><th class="text-right py-2 w-24">Đơn giá/h</th><th class="text-right py-2 w-28">Số giờ</th><th class="text-right py-2 w-32">Thành tiền</th></tr></thead><tbody id="probationHoursBody" class="divide-y divide-slate-100 dark:divide-slate-800/60"></tbody></table></div>
           </details>
         </div>
-
-        <!-- Right Column: Allowances, Deductions & Live Summary (5 cols) -->
         <div class="lg:col-span-5 space-y-6">
           <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-base font-bold flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-                <i data-lucide="gift" class="w-5 h-5"></i>
-                Các Khoản Phụ Cấp & Thưởng
-              </h2>
-              <span id="allowanceSubtotalBadge" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
-                2.720.000 ₫
-              </span>
-            </div>
-            <div id="allowancesBody" class="space-y-2.5">
-            </div>
+            <div class="flex items-center justify-between mb-4"><h2 class="text-base font-bold flex items-center gap-2 text-emerald-600 dark:text-emerald-400"><i data-lucide="gift" class="w-5 h-5"></i> Các Phụ Cấp & Thưởng</h2><span id="allowanceSubtotalBadge" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">0 ₫</span></div>
+            <div id="allowancesBody" class="space-y-2.5"></div>
           </div>
-
           <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-            <h2 class="text-base font-bold flex items-center gap-2 text-rose-600 dark:text-rose-400 mb-4">
-              <i data-lucide="shield-alert" class="w-5 h-5"></i>
-              Các Khoản Giảm Trừ & Phép Tồn
-            </h2>
+            <h2 class="text-base font-bold flex items-center gap-2 text-rose-600 dark:text-rose-400 mb-4"><i data-lucide="shield-alert" class="w-5 h-5"></i> Khấu Trừ & Phép Tồn</h2>
             <div class="space-y-3 text-sm">
-              <div class="flex items-center justify-between gap-2">
-                <div class="flex items-center gap-2">
-                  <span class="font-medium text-slate-700 dark:text-slate-300">Tỷ lệ BHXH (%)</span>
-                  <input type="number" id="bhxhRate" value="10.5" step="0.1" oninput="saveAndCalc()" class="w-20 px-2 py-1 text-right font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" />
-                </div>
-                <span id="bhxhAmountDisplay" class="font-bold text-rose-600 dark:text-rose-400">630.000 ₫</span>
-              </div>
-
-              <div class="flex items-center justify-between gap-2">
-                <label class="font-medium text-slate-700 dark:text-slate-300">Thuế TNCN (VNĐ)</label>
-                <input type="number" id="taxAmount" value="0" step="10000" oninput="saveAndCalc()" class="w-36 px-3 py-1.5 text-right font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" />
-              </div>
-
-              <div class="flex items-center justify-between gap-2">
-                <label class="font-medium text-slate-700 dark:text-slate-300">Phạt / Khấu trừ khác (VNĐ)</label>
-                <input type="number" id="penaltyAmount" value="0" step="10000" oninput="saveAndCalc()" class="w-36 px-3 py-1.5 text-right font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" />
-              </div>
-
-              <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-                <label class="font-medium text-slate-700 dark:text-slate-300">Phép tồn (Ngày)</label>
-                <input type="number" id="remainingLeave" value="1.00" step="0.5" oninput="saveAndCalc()" class="w-28 px-3 py-1.5 text-right font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" />
-              </div>
+              <div class="flex justify-between items-center gap-2"><span>Tỷ lệ BHXH (%)</span><input type="number" id="bhxhRate" step="0.1" oninput="saveAndCalc()" class="w-20 px-2 py-1 text-right font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" /><span id="bhxhAmountDisplay" class="font-bold text-rose-600 dark:text-rose-400 w-24 text-right">0 ₫</span></div>
+              <div class="flex justify-between items-center gap-2"><span>Thuế TNCN (VNĐ)</span><input type="number" id="taxAmount" step="10000" oninput="saveAndCalc()" class="w-36 px-3 py-1.5 text-right font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" /></div>
+              <div class="flex justify-between items-center gap-2"><span>Phạt/Khác (VNĐ)</span><input type="number" id="penaltyAmount" step="10000" oninput="saveAndCalc()" class="w-36 px-3 py-1.5 text-right font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" /></div>
+              <div class="pt-2 border-t flex justify-between items-center gap-2 border-slate-100 dark:border-slate-800"><span>Phép tồn (Ngày)</span><input type="number" id="remainingLeave" step="0.5" oninput="saveAndCalc()" class="w-28 px-3 py-1.5 text-right font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" /></div>
             </div>
           </div>
-
           <div class="bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 text-white p-6 rounded-2xl shadow-xl">
-            <div class="flex items-center justify-between mb-4">
-              <span class="text-xs font-bold uppercase tracking-wider text-blue-300">Tổng Kết Thu Nhập Tháng</span>
-              <button onclick="switchTab('payslip')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded-lg font-semibold transition flex items-center gap-1">
-                <i data-lucide="printer" class="w-3.5 h-3.5"></i> Xem Phiếu Lương
-              </button>
-            </div>
+            <div class="flex justify-between mb-4"><span class="text-xs font-bold uppercase text-blue-300">Tổng Kết Tháng</span><button onclick="switchTab('payslip')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded-lg font-semibold flex gap-1"><i data-lucide="printer" class="w-3.5 h-3.5"></i> Phiếu Lương</button></div>
             <div class="space-y-2.5 text-sm">
-              <div class="flex justify-between text-blue-100">
-                <span>Lương giờ công (Chính thức + Thử việc)</span>
-                <span id="sumWorkingSalary" class="font-semibold">10.024.038 ₫</span>
-              </div>
-              <div class="flex justify-between text-blue-100">
-                <span>Tổng các khoản phụ cấp</span>
-                <span id="sumAllowances" class="font-semibold">2.720.000 ₫</span>
-              </div>
-              <div class="flex justify-between text-base font-bold text-amber-300 pt-2 border-t border-white/15">
-                <span>TỔNG LƯƠNG (GROSS)</span>
-                <span id="sumGrossSalary">12.744.038 ₫</span>
-              </div>
-              <div class="flex justify-between text-rose-300">
-                <span>Tổng giảm trừ (BHXH + Thuế + Phạt)</span>
-                <span id="sumDeductions">- 630.000 ₫</span>
-              </div>
-              <div class="flex justify-between items-baseline pt-3 border-t border-white/20">
-                <span class="text-lg font-extrabold">THỰC LĨNH</span>
-                <span id="sumNetSalary" class="text-3xl font-extrabold text-emerald-400">12.114.038 ₫</span>
-              </div>
+              <div class="flex justify-between text-blue-100"><span>Lương giờ công</span><span id="sumWorkingSalary" class="font-semibold">0 ₫</span></div>
+              <div class="flex justify-between text-blue-100"><span>Tổng phụ cấp</span><span id="sumAllowances" class="font-semibold">0 ₫</span></div>
+              <div class="flex justify-between text-base font-bold text-amber-300 pt-2 border-t border-white/15"><span>TỔNG LƯƠNG (GROSS)</span><span id="sumGrossSalary">0 ₫</span></div>
+              <div class="flex justify-between text-rose-300"><span>Giảm trừ</span><span id="sumDeductions">0 ₫</span></div>
+              <div class="flex justify-between items-baseline pt-3 border-t border-white/20"><span class="text-lg font-extrabold">THỰC LĨNH</span><span id="sumNetSalary" class="text-3xl font-extrabold text-emerald-400">0 ₫</span></div>
             </div>
           </div>
         </div>
-
       </div>
     </section>
 
-    <!-- TAB 2: DAILY ATTENDANCE CALENDAR -->
+    <!-- TAB 2: CALENDAR -->
     <section id="tab-calendar" class="hidden space-y-6">
       <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <i data-lucide="calendar-days" class="w-5 h-5 text-blue-600"></i>
-              Bảng Chấm Công Chi Tiết Theo Ngày
-            </h2>
-            <p class="text-xs text-slate-500 mt-0.5">
-              Hỗ trợ tự động bóc tách chuẩn: <b>Ca Đêm = 2h Ngày (20h-22h) + 6h Đêm (22h-5h)</b>. Bấm vào ngày để điều chỉnh hoặc dùng nút điền nhanh!
-            </p>
-          </div>
+          <div><h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2"><i data-lucide="calendar-days" class="w-5 h-5 text-blue-600"></i> Bảng Chấm Công</h2></div>
           <div class="flex flex-wrap gap-2">
-            <button onclick="quickFillFullMonth('day')" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-1.5">
-              <i data-lucide="sun" class="w-4 h-4 text-amber-500"></i> Điền tháng: Ca Ngày (8h)
-            </button>
-            <button onclick="quickFillFullMonth('night')" class="px-3 py-2 rounded-xl text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 transition flex items-center gap-1.5">
-              <i data-lucide="moon" class="w-4 h-4 text-indigo-500"></i> Điền tháng: Ca Đêm (2h ngày + 6h đêm)
-            </button>
-            <button onclick="syncCalendarToSalary()" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition flex items-center gap-1.5">
-              <i data-lucide="refresh-cw" class="w-4 h-4"></i> Đồng Bộ Giờ Sang Bảng Lương
-            </button>
+            <button onclick="quickFillFullMonth('day')" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 flex gap-1.5"><i data-lucide="sun" class="w-4 h-4 text-amber-500"></i> Điền tháng: Ca Ngày (8h)</button>
+            <button onclick="quickFillFullMonth('night')" class="px-3 py-2 rounded-xl text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 flex gap-1.5"><i data-lucide="moon" class="w-4 h-4 text-indigo-500"></i> Điền tháng: Ca Đêm (2h+6h)</button>
+            <button onclick="syncCalendarToSalary()" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white flex gap-1.5"><i data-lucide="refresh-cw" class="w-4 h-4"></i> Đồng Bộ Giờ Sang Bảng Lương</button>
           </div>
         </div>
-
-        <!-- Calendar Grid -->
-        <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-500 mb-2">
-          <div class="py-1.5 text-rose-500">CN</div>
-          <div class="py-1.5">T2</div>
-          <div class="py-1.5">T3</div>
-          <div class="py-1.5">T4</div>
-          <div class="py-1.5">T5</div>
-          <div class="py-1.5">T6</div>
-          <div class="py-1.5 text-blue-600">T7</div>
-        </div>
-        <div id="calendarGrid" class="grid grid-cols-7 gap-2">
-        </div>
+        <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-500 mb-2"><div class="py-1.5 text-rose-500">CN</div><div class="py-1.5">T2</div><div class="py-1.5">T3</div><div class="py-1.5">T4</div><div class="py-1.5">T5</div><div class="py-1.5">T6</div><div class="py-1.5 text-blue-600">T7</div></div>
+        <div id="calendarGrid" class="grid grid-cols-7 gap-2"></div>
       </div>
 
-      <!-- Advanced Day Editor Modal -->
+      <!-- Modal -->
       <div id="dayEditorModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
-          <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-            <div>
-              <h3 id="modalDayTitle" class="text-base font-bold text-slate-900 dark:text-white">Chấm công Ngày</h3>
-              <p class="text-xs text-slate-500" id="modalDaySubtitle">Chọn mẫu ca nhanh hoặc bóc tách chi tiết từng loại giờ</p>
-            </div>
-            <button onclick="closeDayModal()" class="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
-              <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
+          <div class="flex justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+            <div><h3 id="modalDayTitle" class="text-base font-bold text-slate-900 dark:text-white">Chấm công Ngày</h3><p class="text-xs text-slate-500">Mẫu ca nhanh hoặc bóc tách chi tiết</p></div>
+            <button onclick="closeDayModal()" class="p-1 rounded-lg hover:bg-slate-100 dark:bg-slate-800"><i data-lucide="x" class="w-5 h-5"></i></button>
           </div>
-
-          <!-- Quick Shift Presets -->
           <div>
-            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">MẪU CA NHANH (Click để tự động phân bổ giờ)</label>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              <button type="button" onclick="applyPreset('day')" class="px-3 py-2 rounded-xl text-xs font-semibold border border-amber-300 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 hover:bg-amber-100 transition text-left">
-                ☀️ Ca Ngày<br/><span class="text-[10px] text-amber-600 font-normal">8h ngày 100%</span>
-              </button>
-              <button type="button" onclick="applyPreset('night')" class="px-3 py-2 rounded-xl text-xs font-semibold border border-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-200 hover:bg-indigo-100 transition text-left">
-                🌙 Ca Đêm Chuẩn<br/><span class="text-[10px] text-indigo-500 font-normal">2h ngày + 6h đêm</span>
-              </button>
-              <button type="button" onclick="applyPreset('sunday_day')" class="px-3 py-2 rounded-xl text-xs font-semibold border border-rose-300 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-200 hover:bg-rose-100 transition text-left">
-                📅 CN Ca Ngày<br/><span class="text-[10px] text-rose-600 font-normal">8h CN ngày 200%</span>
-              </button>
-              <button type="button" onclick="applyPreset('sunday_night')" class="px-3 py-2 rounded-xl text-xs font-semibold border border-purple-300 bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-200 hover:bg-purple-100 transition text-left">
-                🌌 CN Ca Đêm<br/><span class="text-[10px] text-purple-600 font-normal">2h CN + 6h đêm CN</span>
-              </button>
-              <button type="button" onclick="applyPreset('leave_paid')" class="px-3 py-2 rounded-xl text-xs font-semibold border border-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-100 transition text-left">
-                🌴 Nghỉ Phép<br/><span class="text-[10px] text-emerald-600 font-normal">8h phép 100%</span>
-              </button>
-              <button type="button" onclick="applyPreset('off')" class="px-3 py-2 rounded-xl text-xs font-semibold border border-slate-200 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition text-left">
-                ⛔ Nghỉ Không Công<br/><span class="text-[10px] text-slate-500 font-normal">0 giờ</span>
-              </button>
+              <button type="button" onclick="applyPreset('day')" class="px-3 py-2 rounded-xl text-xs border border-amber-300 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 text-left">☀️ Ca Ngày<br/><span class="text-[10px] text-amber-600 font-normal">8h 100%</span></button>
+              <button type="button" onclick="applyPreset('night')" class="px-3 py-2 rounded-xl text-xs border border-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-200 text-left">🌙 Ca Đêm Chuẩn<br/><span class="text-[10px] text-indigo-500 font-normal">2h ngày + 6h đêm</span></button>
+              <button type="button" onclick="applyPreset('sunday_day')" class="px-3 py-2 rounded-xl text-xs border border-rose-300 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-200 text-left">📅 CN Ca Ngày<br/><span class="text-[10px] text-rose-600 font-normal">8h CN 200%</span></button>
+              <button type="button" onclick="applyPreset('sunday_night')" class="px-3 py-2 rounded-xl text-xs border border-purple-300 bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-200 text-left">🌌 CN Ca Đêm<br/><span class="text-[10px] text-purple-600 font-normal">2h CN + 6h đêm CN</span></button>
+              <button type="button" onclick="applyPreset('leave_paid')" class="px-3 py-2 rounded-xl text-xs border border-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 text-left">🌴 Nghỉ Phép<br/><span class="text-[10px] text-emerald-600 font-normal">8h phép</span></button>
+              <button type="button" onclick="applyPreset('off')" class="px-3 py-2 rounded-xl text-xs border border-slate-200 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-left">⛔ Nghỉ<br/><span class="text-[10px] text-slate-500 font-normal">0 giờ</span></button>
             </div>
           </div>
-
-          <!-- Detailed Breakdown Form -->
           <div class="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <div class="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-between">
-              <span>BÓC TÁCH CHI TIẾT SỐ GIỜ CÔNG TRONG NGÀY:</span>
-              <span id="modalTotalHoursBadge" class="text-blue-600 font-extrabold text-xs">Tổng: 8h</span>
+            <div class="text-xs font-bold text-slate-700 flex justify-between dark:text-slate-200"><span id="modalTotalHoursBadge" class="text-blue-600">Tổng: 0h</span></div>
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 grid grid-cols-2 gap-2 text-xs">
+              <div><label class="block text-slate-600 dark:text-slate-300 mb-1">Ngày (100%)</label><input type="number" id="m_regDay" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right font-bold rounded border bg-white dark:bg-slate-800" /></div>
+              <div><label class="block text-indigo-600 dark:text-indigo-300 mb-1">Đêm (130%)</label><input type="number" id="m_regNight" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right font-bold rounded border bg-white dark:bg-slate-800 text-indigo-600" /></div>
+              <div><label class="block text-amber-600 dark:text-amber-400 mb-1">OT Ngày (150%)</label><input type="number" id="m_otDay" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right font-bold rounded border bg-white dark:bg-slate-800 text-amber-600" /></div>
+              <div><label class="block text-purple-600 dark:text-purple-400 mb-1">OT Đêm (200%)</label><input type="number" id="m_otNight" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right font-bold rounded border bg-white dark:bg-slate-800 text-purple-600" /></div>
             </div>
-
-            <!-- Group: Ngày thường -->
-            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 space-y-2">
-              <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">1. Giờ Hành Chính & Tăng Ca Ngày Thường</span>
-              <div class="grid grid-cols-2 gap-2 text-xs">
-                <div>
-                  <label class="block text-slate-600 dark:text-slate-300 font-medium mb-1">Giờ Ngày (8h-17h & 20h-22h: 100%)</label>
-                  <input type="number" id="m_regDay" step="0.5" min="0" max="24" oninput="updateModalTotal()" class="w-full px-2.5 py-1.5 text-right font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
-                </div>
-                <div>
-                  <label class="block text-indigo-600 dark:text-indigo-300 font-semibold mb-1">Giờ Ca Đêm (22h-5h: 130%)</label>
-                  <input type="number" id="m_regNight" step="0.5" min="0" max="24" oninput="updateModalTotal()" class="w-full px-2.5 py-1.5 text-right font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-indigo-600" />
-                </div>
-                <div>
-                  <label class="block text-amber-600 dark:text-amber-400 font-medium mb-1">Tăng ca Ngày (150%)</label>
-                  <input type="number" id="m_otDay" step="0.5" min="0" max="24" oninput="updateModalTotal()" class="w-full px-2.5 py-1.5 text-right font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-amber-600" />
-                </div>
-                <div>
-                  <label class="block text-purple-600 dark:text-purple-400 font-medium mb-1">Tăng ca Đêm (200%)</label>
-                  <input type="number" id="m_otNight" step="0.5" min="0" max="24" oninput="updateModalTotal()" class="w-full px-2.5 py-1.5 text-right font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-purple-600" />
-                </div>
-              </div>
-            </div>
-
-            <!-- Group: Chủ Nhật & Lễ & Phép (Collapse/Expand) -->
             <details class="text-xs">
-              <summary class="cursor-pointer font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 py-1">
-                + Bấm để mở rộng: Giờ làm Chủ Nhật, Ngày Lễ, Nghỉ Phép
-              </summary>
+              <summary class="cursor-pointer font-bold text-slate-500 py-1">+ Mở rộng: Giờ CN, Lễ, Phép</summary>
               <div class="grid grid-cols-2 gap-2 mt-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                <div>
-                  <label class="block text-slate-600 dark:text-slate-300 mb-1">Làm Ngày CN (200%)</label>
-                  <input type="number" id="m_sunDay" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right font-bold rounded border bg-white dark:bg-slate-800" />
-                </div>
-                <div>
-                  <label class="block text-slate-600 dark:text-slate-300 mb-1">Làm Đêm CN (250%)</label>
-                  <input type="number" id="m_sunNight" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right font-bold rounded border bg-white dark:bg-slate-800" />
-                </div>
-                <div>
-                  <label class="block text-slate-600 dark:text-slate-300 mb-1">Tăng ca Ngày CN (200%)</label>
-                  <input type="number" id="m_sunOtDay" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right font-bold rounded border bg-white dark:bg-slate-800" />
-                </div>
-                <div>
-                  <label class="block text-slate-600 dark:text-slate-300 mb-1">Tăng ca Đêm CN (270%)</label>
-                  <input type="number" id="m_sunOtNight" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right font-bold rounded border bg-white dark:bg-slate-800" />
-                </div>
-                <div>
-                  <label class="block text-slate-600 dark:text-slate-300 mb-1">Phép có lương (100%)</label>
-                  <input type="number" id="m_paidLeave" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right font-bold rounded border bg-white dark:bg-slate-800" />
-                </div>
-                <div>
-                  <label class="block text-slate-600 dark:text-slate-300 mb-1">Lễ hưởng lương (100%)</label>
-                  <input type="number" id="m_paidHoliday" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right font-bold rounded border bg-white dark:bg-slate-800" />
-                </div>
+                <div><label class="block mb-1">Làm CN (200%)</label><input type="number" id="m_sunDay" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right rounded border bg-white dark:bg-slate-800" /></div>
+                <div><label class="block mb-1">Đêm CN (250%)</label><input type="number" id="m_sunNight" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right rounded border bg-white dark:bg-slate-800" /></div>
+                <div><label class="block mb-1">OT CN (200%)</label><input type="number" id="m_sunOtDay" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right rounded border bg-white dark:bg-slate-800" /></div>
+                <div><label class="block mb-1">OT Đêm CN (270%)</label><input type="number" id="m_sunOtNight" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right rounded border bg-white dark:bg-slate-800" /></div>
+                <div><label class="block mb-1">Phép (100%)</label><input type="number" id="m_paidLeave" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right rounded border bg-white dark:bg-slate-800" /></div>
+                <div><label class="block mb-1">Lễ (100%)</label><input type="number" id="m_paidHoliday" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right rounded border bg-white dark:bg-slate-800" /></div>
               </div>
             </details>
-
-            <div>
-              <label class="block text-xs font-semibold text-slate-500 mb-1">Ghi chú ca làm (Tùy chọn)</label>
-              <input type="text" id="m_note" placeholder="VD: Ca đêm SMT, OT 2h..." class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" />
-            </div>
+            <div><label class="block text-xs font-semibold mb-1">Ghi chú (Tùy chọn)</label><input type="text" id="m_note" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:bg-slate-800" /></div>
           </div>
-
-          <div class="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-800">
-            <button type="button" onclick="clearCurrentDay()" class="text-xs text-rose-600 hover:underline font-semibold">
-              Xóa ngày này
-            </button>
+          <div class="flex justify-between items-center pt-3 border-t">
+            <button type="button" onclick="clearCurrentDay()" class="text-xs text-rose-600 hover:underline">Xóa ngày này</button>
             <div class="flex gap-2">
-              <button onclick="closeDayModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800">Hủy</button>
-              <button onclick="saveDayAttendance()" class="px-5 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-sm">Lưu Ngày Này</button>
+              <button onclick="closeDayModal()" class="px-4 py-2 rounded-xl text-xs bg-slate-100 dark:bg-slate-800">Hủy</button>
+              <button onclick="saveDayAttendance()" class="px-5 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700">Lưu Ngày Này</button>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- TAB 3: EXACT DOBEST PAYSLIP VIEW (PRINTABLE) -->
+    <!-- TAB 3: PAYSLIP -->
     <section id="tab-payslip" class="hidden space-y-4">
-      <div class="flex justify-between items-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 no-print">
-        <div>
-          <h2 class="text-base font-bold">Mẫu Phiếu Lương Chuẩn CÔNG TY TNHH DOBEST</h2>
-          <p class="text-xs text-slate-500">Khớp từng dòng và công thức với phiếu lương thực tế của công ty</p>
-        </div>
-        <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-2 shadow">
-          <i data-lucide="printer" class="w-4 h-4"></i> In Phiếu Lương / Xuất PDF
-        </button>
+      <div class="flex justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl no-print">
+        <div><h2 class="text-base font-bold">Mẫu Phiếu Lương DOBEST</h2></div>
+        <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold flex items-center gap-2"><i data-lucide="printer" class="w-4 h-4"></i> In / Xuất PDF</button>
       </div>
-
-      <div id="printable-payslip" class="bg-white text-black max-w-xl mx-auto p-6 rounded-xl shadow-md border border-slate-300">
+      <div id="printable-payslip" class="bg-white text-black max-w-xl mx-auto p-6 rounded-xl border border-slate-300">
         <table class="w-full border-collapse border border-black text-xs">
           <thead>
-            <tr>
-              <th colspan="4" class="border border-black py-1.5 text-center font-bold text-sm tracking-wide">
-                CÔNG TY TNHH DOBEST
-              </th>
-            </tr>
-            <tr>
-              <td class="border border-black px-2 py-1 font-bold">Tên Nhân Viên 姓名</td>
-              <td colspan="3" id="ps-empName" class="border border-black px-2 py-1 text-center font-bold">Phạm Ngọc Hải 范玉海</td>
-            </tr>
-            <tr>
-              <td class="border border-black px-2 py-1 font-bold">Mã nhân viên 工号</td>
-              <td colspan="3" id="ps-empId" class="border border-black px-2 py-1 text-center font-bold">DB0351</td>
-            </tr>
-            <tr>
-              <td class="border border-black px-2 py-1 font-bold">Ký nhận 签收</td>
-              <td colspan="3" class="border border-black px-2 py-1 text-center text-slate-400 italic">Đã xác nhận điện tử</td>
-            </tr>
-            <tr>
-              <td colspan="4" id="ps-monthTitle" class="border border-black py-1.5 text-center font-bold text-sm">
-                PHIẾU LƯƠNG THÁNG 9<br/><span class="text-xs font-semibold">(01/09/2026 - 30/09/2026)</span>
-              </td>
-            </tr>
-            <tr class="bg-orange-200/80">
-              <td class="border border-black px-2 py-1 font-bold text-center">Lương cơ bản</td>
-              <td id="ps-baseSalary" class="border border-black px-2 py-1 font-bold text-center">6,000,000</td>
-              <td class="border border-black px-2 py-1 font-bold text-center bg-white">Giờ công chuẩn</td>
-              <td id="ps-standardHours" class="border border-black px-2 py-1 font-bold text-right bg-white">208</td>
-            </tr>
+            <tr><th colspan="4" class="border border-black py-1.5 text-center font-bold text-sm">CÔNG TY TNHH DOBEST</th></tr>
+            <tr><td class="border border-black px-2 py-1 font-bold">Tên Nhân Viên 姓名</td><td colspan="3" id="ps-empName" class="border border-black px-2 py-1 text-center font-bold"></td></tr>
+            <tr><td class="border border-black px-2 py-1 font-bold">Mã nhân viên 工号</td><td colspan="3" id="ps-empId" class="border border-black px-2 py-1 text-center font-bold"></td></tr>
+            <tr><td colspan="4" id="ps-monthTitle" class="border border-black py-1.5 text-center font-bold text-sm"></td></tr>
+            <tr class="bg-orange-200/80"><td class="border border-black px-2 py-1 font-bold text-center">Lương cơ bản</td><td id="ps-baseSalary" class="border border-black px-2 py-1 font-bold text-center"></td><td class="border border-black px-2 py-1 font-bold text-center bg-white">Giờ công chuẩn</td><td id="ps-standardHours" class="border border-black px-2 py-1 font-bold text-right bg-white"></td></tr>
           </thead>
-          <tbody id="ps-tableBody">
-          </tbody>
+          <tbody id="ps-tableBody"></tbody>
         </table>
       </div>
     </section>
 
-    <!-- TAB 4: ANALYTICS & GOAL PLANNER -->
+    <!-- TAB 4: ANALYTICS -->
     <section id="tab-analytics" class="hidden space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-          <h3 class="text-base font-bold mb-4 flex items-center gap-2">
-            <i data-lucide="pie-chart" class="w-5 h-5 text-blue-600"></i>
-            Cơ Cấu Thu Nhập Tháng Này
-          </h3>
-          <div class="h-64 flex items-center justify-center">
-            <canvas id="incomePieChart"></canvas>
-          </div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-          <h3 class="text-base font-bold flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
-            <i data-lucide="target" class="w-5 h-5"></i>
-            Công Cụ Tính Mục Tiêu Thu Nhập (Target Planner)
-          </h3>
-          <p class="text-xs text-slate-500">
-            Nhập mức <b>Thực Lĩnh</b> bạn mong muốn đạt được trong tháng. Hệ thống sẽ tự động tính số giờ Tăng ca (OT) cần làm thêm.
-          </p>
-          <div>
-            <label class="block text-xs font-semibold text-slate-500 mb-1">Mục tiêu Thực Lĩnh mong muốn (VNĐ)</label>
-            <input type="number" id="targetNetInput" value="15000000" step="500000" oninput="updateGoalPlanner()" class="w-full px-4 py-2.5 text-lg font-extrabold text-indigo-600 dark:text-indigo-400 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" />
-          </div>
-          <div id="goalResultBox" class="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-900 text-sm space-y-2">
-          </div>
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl"><h3 class="font-bold mb-4">Cơ Cấu Thu Nhập</h3><div class="h-64"><canvas id="incomePieChart"></canvas></div></div>
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl space-y-4">
+          <h3 class="font-bold">Mục Tiêu Thu Nhập</h3>
+          <input type="number" id="targetNetInput" value="15000000" step="500000" oninput="updateGoalPlanner()" class="w-full px-4 py-2.5 text-lg font-extrabold text-indigo-600 rounded-xl border dark:bg-slate-800" />
+          <div id="goalResultBox" class="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-sm space-y-2"></div>
         </div>
       </div>
     </section>
-
   </main>
 
   <script>
+    // ----------------------------------------------------
+    // 1. FIREBASE CONFIGURATION (Từ ảnh chụp màn hình Vercel)
+    // ----------------------------------------------------
+    const firebaseConfig = {
+      apiKey: "AIzaSyCG3yTbJ9Yn2wE0dCFAl9RS0NfuarNkziU",
+      authDomain: "dobest-salary.firebaseapp.com",
+      databaseURL: "https://dobest-salary-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "dobest-salary",
+      storageBucket: "dobest-salary.firebasestorage.app",
+      messagingSenderId: "948662571594",
+      appId: "1:948662571594:web:2e6f74cf3368f0dd718cb3"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    let cloudSaveTimeout = null;
+
+    // ----------------------------------------------------
+    // 2. CONSTANTS & DATA MODEL
+    // ----------------------------------------------------
     const OFFICIAL_ITEMS = [
       { key: 'regDay', label: 'Giờ hành chính ngày 8h-17h và 20h-22h: 100%', mult: 1.0, defaultHours: 184 },
       { key: 'regNight', label: 'Giờ hành chính ca đêm 22h-5h : 130%', mult: 1.3, defaultHours: 0 },
@@ -670,50 +337,62 @@
     let selectedCalendarDay = null;
 
     function getDefaultMonthRecord() {
-      const officialHours = {};
-      OFFICIAL_ITEMS.forEach(i => officialHours[i.key] = i.defaultHours);
-      const probationHours = {};
-      PROBATION_ITEMS.forEach(i => probationHours[i.key] = i.defaultHours);
-      const allowances = {};
-      ALLOWANCE_ITEMS.forEach(a => allowances[a.key] = a.defaultVal);
+      const officialHours = {}; OFFICIAL_ITEMS.forEach(i => officialHours[i.key] = i.defaultHours);
+      const probationHours = {}; PROBATION_ITEMS.forEach(i => probationHours[i.key] = i.defaultHours);
+      const allowances = {}; ALLOWANCE_ITEMS.forEach(a => allowances[a.key] = a.defaultVal);
 
       return {
-        empName: 'Phạm Ngọc Hải 范玉海',
-        empId: 'DB0351',
-        baseSalary: 6000000,
-        standardHours: 208,
-        bhxhRate: 10.5,
-        taxAmount: 0,
-        penaltyAmount: 0,
-        remainingLeave: 1.0,
-        officialHours,
-        probationHours,
-        allowances,
-        calendarDays: {}
+        empName: 'Phạm Ngọc Hải 范玉海', empId: 'DB0351',
+        baseSalary: 6000000, standardHours: 208,
+        bhxhRate: 10.5, taxAmount: 0, penaltyAmount: 0, remainingLeave: 1.0,
+        officialHours, probationHours, allowances, calendarDays: {}
       };
     }
 
-    function fmtNum(n) {
-      return Math.round(n).toLocaleString('en-US');
-    }
+    function fmtNum(n) { return Math.round(n).toLocaleString('en-US'); }
+    function fmtVND(n) { return Math.round(n).toLocaleString('vi-VN') + ' ₫'; }
 
-    function fmtVND(n) {
-      return Math.round(n).toLocaleString('vi-VN') + ' ₫';
-    }
-
+    // ----------------------------------------------------
+    // 3. INITIALIZATION & SYNC LOGIC
+    // ----------------------------------------------------
     function initApp() {
-      const saved = localStorage.getItem('DOBEST_SALARY_PRO_V2');
-      if (saved) {
-        try {
-          state = JSON.parse(saved);
-        } catch (e) {
-          console.error(e);
-        }
-      }
+      // 1. Tải nhanh từ LocalStorage cho đỡ giật UI
+      const saved = localStorage.getItem('DOBEST_SALARY_PRO_V3');
+      if (saved) { try { state = JSON.parse(saved); } catch (e) {} }
+
       if (!state.monthsData || !state.monthsData[state.currentMonth]) {
         state.monthsData = state.monthsData || {};
         state.monthsData['2026-09'] = getDefaultMonthRecord();
       }
+      
+      setupUIBindings();
+      
+      // 2. Fetch dữ liệu từ Firebase
+      document.getElementById('syncStatusIcon').innerHTML = '<i data-lucide="refresh-cw" class="w-4 h-4 text-amber-500 animate-spin"></i>';
+      document.getElementById('syncStatusText').textContent = 'Đang tải mây...';
+      lucide.createIcons();
+
+      database.ref('users/DB0351/salaryState').once('value').then((snapshot) => {
+        const cloudData = snapshot.val();
+        if (cloudData && cloudData.monthsData) {
+          state = cloudData; // Ghi đè bằng dữ liệu mây
+        }
+        
+        document.getElementById('syncStatusIcon').innerHTML = '<i data-lucide="cloud-check" class="w-4 h-4 text-emerald-500"></i>';
+        document.getElementById('syncStatusText').textContent = 'Đã đồng bộ';
+        
+        loadMonthToUI();
+        saveAndCalc(false); // Tính toán nhưng không bắn ngược lên mây
+        lucide.createIcons();
+      }).catch(err => {
+        console.error("Lỗi tải từ Cloud:", err);
+        document.getElementById('syncStatusIcon').innerHTML = '<i data-lucide="cloud-off" class="w-4 h-4 text-rose-500"></i>';
+        document.getElementById('syncStatusText').textContent = 'Offline';
+        lucide.createIcons();
+      });
+    }
+
+    function setupUIBindings() {
       document.getElementById('monthPicker').value = state.currentMonth;
       document.getElementById('monthPicker').addEventListener('change', (e) => {
         state.currentMonth = e.target.value;
@@ -721,48 +400,67 @@
           state.monthsData[state.currentMonth] = getDefaultMonthRecord();
         }
         loadMonthToUI();
-        saveAndCalc();
+        saveAndCalc(true);
       });
-
       buildInputTables();
       loadMonthToUI();
-      saveAndCalc();
+      saveAndCalc(false);
       lucide.createIcons();
     }
 
+    function syncToCloud() {
+      clearTimeout(cloudSaveTimeout);
+      
+      document.getElementById('syncStatusIcon').innerHTML = '<i data-lucide="refresh-cw" class="w-4 h-4 animate-spin text-amber-500"></i>';
+      document.getElementById('syncStatusText').textContent = 'Đang lưu...';
+      lucide.createIcons();
+
+      // Debounce 1.5s tránh spam server khi đang gõ số liên tục
+      cloudSaveTimeout = setTimeout(() => {
+        database.ref('users/DB0351/salaryState').set(state)
+        .then(() => {
+            document.getElementById('syncStatusIcon').innerHTML = '<i data-lucide="cloud-check" class="w-4 h-4 text-emerald-500"></i>';
+            document.getElementById('syncStatusText').textContent = 'Đã lưu mây';
+            lucide.createIcons();
+        })
+        .catch(err => {
+            console.error("Lỗi lưu Cloud:", err);
+            document.getElementById('syncStatusIcon').innerHTML = '<i data-lucide="cloud-off" class="w-4 h-4 text-rose-500"></i>';
+            document.getElementById('syncStatusText').textContent = 'Lưu lỗi';
+            lucide.createIcons();
+        });
+      }, 1500);
+    }
+
+    // ----------------------------------------------------
+    // 4. CORE APP LOGIC
+    // ----------------------------------------------------
     function buildInputTables() {
       const offBody = document.getElementById('officialHoursBody');
       offBody.innerHTML = OFFICIAL_ITEMS.map(item => `
-        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-          <td class="py-2 pr-2 font-medium text-slate-700 dark:text-slate-200">${item.label}</td>
+        <tr class="hover:bg-slate-50 transition">
+          <td class="py-2 pr-2 font-medium">${item.label}</td>
           <td id="unit-${item.key}" class="py-2 px-2 text-right text-xs text-slate-500 font-mono">0</td>
-          <td class="py-1.5 px-1 text-right">
-            <input type="number" step="0.5" min="0" id="input-${item.key}" oninput="onHourInput('official', '${item.key}', this.value)"
-              class="w-24 px-2.5 py-1 text-right font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-blue-500 outline-none" />
-          </td>
-          <td id="total-${item.key}" class="py-2 pl-2 text-right font-bold text-slate-900 dark:text-white">0 ₫</td>
+          <td class="py-1.5 px-1 text-right"><input type="number" step="0.5" min="0" id="input-${item.key}" oninput="onHourInput('official', '${item.key}', this.value)" class="w-24 px-2.5 py-1 text-right font-bold rounded-lg border dark:bg-slate-800" /></td>
+          <td id="total-${item.key}" class="py-2 pl-2 text-right font-bold">0 ₫</td>
         </tr>
       `).join('');
 
       const probBody = document.getElementById('probationHoursBody');
       probBody.innerHTML = PROBATION_ITEMS.map(item => `
-        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-          <td class="py-2 pr-2 font-medium text-slate-700 dark:text-slate-200">${item.label}</td>
+        <tr class="hover:bg-slate-50 transition">
+          <td class="py-2 pr-2 font-medium">${item.label}</td>
           <td id="unit-${item.key}" class="py-2 px-2 text-right text-xs text-slate-500 font-mono">0</td>
-          <td class="py-1.5 px-1 text-right">
-            <input type="number" step="0.5" min="0" id="input-${item.key}" oninput="onHourInput('probation', '${item.key}', this.value)"
-              class="w-24 px-2.5 py-1 text-right font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-amber-500 outline-none" />
-          </td>
-          <td id="total-${item.key}" class="py-2 pl-2 text-right font-bold text-slate-900 dark:text-white">0 ₫</td>
+          <td class="py-1.5 px-1 text-right"><input type="number" step="0.5" min="0" id="input-${item.key}" oninput="onHourInput('probation', '${item.key}', this.value)" class="w-24 px-2.5 py-1 text-right font-bold rounded-lg border dark:bg-slate-800" /></td>
+          <td id="total-${item.key}" class="py-2 pl-2 text-right font-bold">0 ₫</td>
         </tr>
       `).join('');
 
       const allowBody = document.getElementById('allowancesBody');
       allowBody.innerHTML = ALLOWANCE_ITEMS.map(item => `
-        <div class="flex items-center justify-between gap-2 py-1 border-b border-slate-100 dark:border-slate-800/60 last:border-none">
-          <label class="text-sm font-medium ${item.highlight ? 'text-orange-600 dark:text-orange-400 font-bold' : 'text-slate-700 dark:text-slate-300'}">${item.label}</label>
-          <input type="number" step="10000" id="allow-${item.key}" oninput="onAllowanceInput('${item.key}', this.value)"
-            class="w-36 px-3 py-1.5 text-right text-sm font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none" />
+        <div class="flex justify-between py-1 border-b last:border-none border-slate-100 dark:border-slate-800">
+          <label class="text-sm font-medium ${item.highlight ? 'text-orange-600 font-bold' : ''}">${item.label}</label>
+          <input type="number" step="10000" id="allow-${item.key}" oninput="onAllowanceInput('${item.key}', this.value)" class="w-36 px-3 py-1.5 text-right font-bold rounded-lg border dark:bg-slate-800" />
         </div>
       `).join('');
     }
@@ -778,18 +476,9 @@
       document.getElementById('penaltyAmount').value = rec.penaltyAmount ?? 0;
       document.getElementById('remainingLeave').value = rec.remainingLeave ?? 1.0;
 
-      OFFICIAL_ITEMS.forEach(item => {
-        const el = document.getElementById(`input-${item.key}`);
-        if (el) el.value = rec.officialHours[item.key] ?? 0;
-      });
-      PROBATION_ITEMS.forEach(item => {
-        const el = document.getElementById(`input-${item.key}`);
-        if (el) el.value = rec.probationHours[item.key] ?? 0;
-      });
-      ALLOWANCE_ITEMS.forEach(item => {
-        const el = document.getElementById(`allow-${item.key}`);
-        if (el) el.value = rec.allowances[item.key] ?? 0;
-      });
+      OFFICIAL_ITEMS.forEach(item => { const el = document.getElementById(`input-${item.key}`); if (el) el.value = rec.officialHours[item.key] ?? 0; });
+      PROBATION_ITEMS.forEach(item => { const el = document.getElementById(`input-${item.key}`); if (el) el.value = rec.probationHours[item.key] ?? 0; });
+      ALLOWANCE_ITEMS.forEach(item => { const el = document.getElementById(`allow-${item.key}`); if (el) el.value = rec.allowances[item.key] ?? 0; });
 
       renderCalendar();
     }
@@ -798,51 +487,29 @@
       const rec = state.monthsData[state.currentMonth];
       if (group === 'official') rec.officialHours[key] = parseFloat(val) || 0;
       else rec.probationHours[key] = parseFloat(val) || 0;
-      saveAndCalc();
+      saveAndCalc(true);
     }
 
     function onAllowanceInput(key, val) {
-      const rec = state.monthsData[state.currentMonth];
-      rec.allowances[key] = parseFloat(val) || 0;
-      saveAndCalc();
+      state.monthsData[state.currentMonth].allowances[key] = parseFloat(val) || 0;
+      saveAndCalc(true);
     }
 
     function calculateMonth(rec) {
       const exactHourly = rec.baseSalary / (rec.standardHours || 208);
-
       let officialExactSum = 0;
       const officialBreakdown = OFFICIAL_ITEMS.map(item => {
-        const hrs = rec.officialHours[item.key] || 0;
-        const unitPrice = exactHourly * item.mult;
-        const lineExact = hrs * unitPrice;
-        officialExactSum += lineExact;
-        return {
-          ...item,
-          hrs,
-          unitRounded: Math.round(unitPrice),
-          lineRounded: Math.round(lineExact)
-        };
+        const hrs = rec.officialHours[item.key] || 0; const unitPrice = exactHourly * item.mult; const lineExact = hrs * unitPrice; officialExactSum += lineExact;
+        return { ...item, hrs, unitRounded: Math.round(unitPrice), lineRounded: Math.round(lineExact) };
       });
 
       let probationExactSum = 0;
       const probationBreakdown = PROBATION_ITEMS.map(item => {
-        const hrs = rec.probationHours[item.key] || 0;
-        const unitPrice = exactHourly * item.mult;
-        const lineExact = hrs * unitPrice;
-        probationExactSum += lineExact;
-        return {
-          ...item,
-          hrs,
-          unitRounded: Math.round(unitPrice),
-          lineRounded: Math.round(lineExact)
-        };
+        const hrs = rec.probationHours[item.key] || 0; const unitPrice = exactHourly * item.mult; const lineExact = hrs * unitPrice; probationExactSum += lineExact;
+        return { ...item, hrs, unitRounded: Math.round(unitPrice), lineRounded: Math.round(lineExact) };
       });
 
-      let allowanceSum = 0;
-      ALLOWANCE_ITEMS.forEach(item => {
-        allowanceSum += (rec.allowances[item.key] || 0);
-      });
-
+      let allowanceSum = 0; ALLOWANCE_ITEMS.forEach(item => { allowanceSum += (rec.allowances[item.key] || 0); });
       const workingSalaryRounded = Math.round(officialExactSum + probationExactSum);
       const grossRounded = Math.round(officialExactSum + probationExactSum + allowanceSum);
       const bhxhRounded = Math.round((rec.baseSalary * (rec.bhxhRate || 0)) / 100);
@@ -850,33 +517,18 @@
       const netRounded = grossRounded - totalDeductions;
 
       const otKeys = ['otDay', 'otNight', 'sunDay', 'sunOtDay', 'sunNight', 'sunOtNight', 'holDay', 'holNight'];
-      let otHours = 0;
-      let otMoneyExact = 0;
-      officialBreakdown.forEach(b => {
-        if (otKeys.includes(b.key)) {
-          otHours += b.hrs;
-          otMoneyExact += b.hrs * exactHourly * b.mult;
-        }
-      });
+      let otHours = 0; let otMoneyExact = 0;
+      officialBreakdown.forEach(b => { if (otKeys.includes(b.key)) { otHours += b.hrs; otMoneyExact += b.hrs * exactHourly * b.mult; } });
 
       return {
-        exactHourly,
-        officialBreakdown,
-        probationBreakdown,
-        officialRounded: Math.round(officialExactSum),
-        probationRounded: Math.round(probationExactSum),
-        workingSalaryRounded,
-        allowanceSum,
-        grossRounded,
-        bhxhRounded,
-        totalDeductions,
-        netRounded,
-        otHours,
-        otMoneyRounded: Math.round(otMoneyExact)
+        exactHourly, officialBreakdown, probationBreakdown,
+        officialRounded: Math.round(officialExactSum), probationRounded: Math.round(probationExactSum),
+        workingSalaryRounded, allowanceSum, grossRounded, bhxhRounded, totalDeductions, netRounded,
+        otHours, otMoneyRounded: Math.round(otMoneyExact)
       };
     }
 
-    function saveAndCalc() {
+    function saveAndCalc(triggerCloud = true) {
       const rec = state.monthsData[state.currentMonth];
       rec.empName = document.getElementById('empName').value;
       rec.empId = document.getElementById('empId').value;
@@ -887,15 +539,14 @@
       rec.penaltyAmount = parseFloat(document.getElementById('penaltyAmount').value) || 0;
       rec.remainingLeave = parseFloat(document.getElementById('remainingLeave').value) || 0;
 
-      localStorage.setItem('DOBEST_SALARY_PRO_V2', JSON.stringify(state));
+      localStorage.setItem('DOBEST_SALARY_PRO_V3', JSON.stringify(state));
+      if(triggerCloud) syncToCloud();
 
       const res = calculateMonth(rec);
-
       res.officialBreakdown.forEach(b => {
         document.getElementById(`unit-${b.key}`).textContent = fmtNum(b.unitRounded);
         document.getElementById(`total-${b.key}`).textContent = b.hrs > 0 ? fmtVND(b.lineRounded) : '-';
       });
-
       res.probationBreakdown.forEach(b => {
         document.getElementById(`unit-${b.key}`).textContent = fmtNum(b.unitRounded);
         document.getElementById(`total-${b.key}`).textContent = b.hrs > 0 ? fmtVND(b.lineRounded) : '-';
@@ -905,7 +556,6 @@
       document.getElementById('probationSubtotalBadge').textContent = fmtVND(res.probationRounded);
       document.getElementById('allowanceSubtotalBadge').textContent = fmtVND(res.allowanceSum);
       document.getElementById('bhxhAmountDisplay').textContent = fmtVND(res.bhxhRounded);
-
       document.getElementById('sumWorkingSalary').textContent = fmtVND(res.workingSalaryRounded);
       document.getElementById('sumAllowances').textContent = fmtVND(res.allowanceSum);
       document.getElementById('sumGrossSalary').textContent = fmtVND(res.grossRounded);
@@ -935,115 +585,35 @@
       const lastDay = new Date(parseInt(yr), parseInt(mo), 0).getDate();
       document.getElementById('ps-monthTitle').innerHTML = `PHIẾU LƯƠNG THÁNG ${parseInt(mo)}<br/><span class="text-xs font-semibold">(01/${mo}/${yr} - ${lastDay}/${mo}/${yr})</span>`;
 
-      let html = `
-        <tr class="bg-slate-100 font-bold">
-          <td class="border border-black px-2 py-1">Thử việc</td>
-          <td class="border border-black px-2 py-1 text-center">Giờ công</td>
-          <td class="border border-black px-2 py-1 text-center">Số tiền</td>
-          <td class="border border-black px-2 py-1 text-center">Thành Tiền</td>
-        </tr>
-      `;
+      let html = `<tr class="bg-slate-100 font-bold"><td class="border border-black px-2 py-1">Thử việc</td><td class="border border-black px-2 py-1 text-center">Giờ công</td><td class="border border-black px-2 py-1 text-center">Số tiền</td><td class="border border-black px-2 py-1 text-center">Thành Tiền</td></tr>`;
       res.probationBreakdown.forEach(item => {
-        html += `
-          <tr>
-            <td class="border border-black px-2 py-0.5">${item.label}</td>
-            <td class="border border-black px-2 py-0.5 text-right">${item.hrs > 0 ? item.hrs.toFixed(2) : '-'}</td>
-            <td class="border border-black px-2 py-0.5 text-right">${fmtNum(item.unitRounded)}</td>
-            <td class="border border-black px-2 py-0.5 text-right">${item.hrs > 0 ? fmtNum(item.lineRounded) : '-'}</td>
-          </tr>
-        `;
+        html += `<tr><td class="border border-black px-2 py-0.5">${item.label}</td><td class="border border-black px-2 py-0.5 text-right">${item.hrs > 0 ? item.hrs.toFixed(2) : '-'}</td><td class="border border-black px-2 py-0.5 text-right">${fmtNum(item.unitRounded)}</td><td class="border border-black px-2 py-0.5 text-right">${item.hrs > 0 ? fmtNum(item.lineRounded) : '-'}</td></tr>`;
       });
 
-      html += `
-        <tr class="bg-slate-100 font-bold">
-          <td class="border border-black px-2 py-1">Chính thức</td>
-          <td class="border border-black px-2 py-1 text-center">Giờ công</td>
-          <td class="border border-black px-2 py-1 text-center">Số tiền</td>
-          <td class="border border-black px-2 py-1 text-center">Thành Tiền</td>
-        </tr>
-      `;
+      html += `<tr class="bg-slate-100 font-bold"><td class="border border-black px-2 py-1">Chính thức</td><td class="border border-black px-2 py-1 text-center">Giờ công</td><td class="border border-black px-2 py-1 text-center">Số tiền</td><td class="border border-black px-2 py-1 text-center">Thành Tiền</td></tr>`;
       res.officialBreakdown.forEach(item => {
-        html += `
-          <tr>
-            <td class="border border-black px-2 py-0.5">${item.label}</td>
-            <td class="border border-black px-2 py-0.5 text-right">${item.hrs > 0 ? item.hrs.toFixed(2) : (item.key === 'personalPaidLeave' ? '0' : '-')}</td>
-            <td class="border border-black px-2 py-0.5 text-right">${fmtNum(item.unitRounded)}</td>
-            <td class="border border-black px-2 py-0.5 text-right font-medium">${item.hrs > 0 ? fmtNum(item.lineRounded) : '-'}</td>
-          </tr>
-        `;
+        html += `<tr><td class="border border-black px-2 py-0.5">${item.label}</td><td class="border border-black px-2 py-0.5 text-right">${item.hrs > 0 ? item.hrs.toFixed(2) : (item.key === 'personalPaidLeave' ? '0' : '-')}</td><td class="border border-black px-2 py-0.5 text-right">${fmtNum(item.unitRounded)}</td><td class="border border-black px-2 py-0.5 text-right font-medium">${item.hrs > 0 ? fmtNum(item.lineRounded) : '-'}</td></tr>`;
       });
 
-      html += `
-        <tr class="bg-slate-100 font-bold">
-          <td class="border border-black px-2 py-1">Các khoản phụ cấp</td>
-          <td class="border border-black px-2 py-1"></td>
-          <td class="border border-black px-2 py-1"></td>
-          <td class="border border-black px-2 py-1 text-center">Thành Tiền</td>
-        </tr>
-      `;
+      html += `<tr class="bg-slate-100 font-bold"><td class="border border-black px-2 py-1">Các khoản phụ cấp</td><td class="border border-black px-2 py-1"></td><td class="border border-black px-2 py-1"></td><td class="border border-black px-2 py-1 text-center">Thành Tiền</td></tr>`;
       ALLOWANCE_ITEMS.forEach(a => {
         const val = rec.allowances[a.key] || 0;
-        html += `
-          <tr>
-            <td class="border border-black px-2 py-0.5 ${a.highlight ? 'bg-orange-200/80 font-semibold' : ''}">${a.label}</td>
-            <td class="border border-black px-2 py-0.5"></td>
-            <td class="border border-black px-2 py-0.5"></td>
-            <td class="border border-black px-2 py-0.5 text-right">${val > 0 ? fmtNum(val) : '-'}</td>
-          </tr>
-        `;
+        html += `<tr><td class="border border-black px-2 py-0.5 ${a.highlight ? 'bg-orange-200/80 font-semibold' : ''}">${a.label}</td><td class="border border-black px-2 py-0.5"></td><td class="border border-black px-2 py-0.5"></td><td class="border border-black px-2 py-0.5 text-right">${val > 0 ? fmtNum(val) : '-'}</td></tr>`;
       });
 
       html += `
-        <tr class="font-bold text-sm bg-slate-50">
-          <td class="border border-black px-2 py-1 text-center">TỔNG LƯƠNG</td>
-          <td class="border border-black px-2 py-1"></td>
-          <td class="border border-black px-2 py-1"></td>
-          <td class="border border-black px-2 py-1 text-right">${fmtNum(res.grossRounded)}</td>
-        </tr>
-        <tr class="font-bold bg-slate-100">
-          <td class="border border-black px-2 py-1 text-center">Các khoản giảm trừ</td>
-          <td class="border border-black px-2 py-1"></td>
-          <td class="border border-black px-2 py-1"></td>
-          <td class="border border-black px-2 py-1"></td>
-        </tr>
-        <tr>
-          <td class="border border-black px-2 py-0.5">Bảo hiểm xã hội ${rec.bhxhRate}%</td>
-          <td class="border border-black px-2 py-0.5"></td>
-          <td class="border border-black px-2 py-0.5"></td>
-          <td class="border border-black px-2 py-0.5 text-right">${res.bhxhRounded > 0 ? fmtNum(res.bhxhRounded) : '-'}</td>
-        </tr>
-        <tr>
-          <td class="border border-black px-2 py-0.5">Thuế TNCN</td>
-          <td class="border border-black px-2 py-0.5"></td>
-          <td class="border border-black px-2 py-0.5"></td>
-          <td class="border border-black px-2 py-0.5 text-right">${rec.taxAmount > 0 ? fmtNum(rec.taxAmount) : '-'}</td>
-        </tr>
-        <tr>
-          <td class="border border-black px-2 py-0.5">Phạt</td>
-          <td class="border border-black px-2 py-0.5"></td>
-          <td class="border border-black px-2 py-0.5"></td>
-          <td class="border border-black px-2 py-0.5 text-right">${rec.penaltyAmount > 0 ? fmtNum(rec.penaltyAmount) : '-'}</td>
-        </tr>
-        <tr class="font-bold text-sm bg-emerald-50">
-          <td class="border border-black px-2 py-1 text-center">THỰC LĨNH</td>
-          <td class="border border-black px-2 py-1"></td>
-          <td class="border border-black px-2 py-1"></td>
-          <td class="border border-black px-2 py-1 text-right">${fmtNum(res.netRounded)}</td>
-        </tr>
-        <tr>
-          <td class="border border-black px-2 py-0.5 text-center font-semibold">Phép tồn</td>
-          <td class="border border-black px-2 py-0.5"></td>
-          <td class="border border-black px-2 py-0.5"></td>
-          <td class="border border-black px-2 py-0.5 text-right font-semibold">${rec.remainingLeave.toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td colspan="4" class="border border-black py-1 text-center italic font-bold">Xin vui lòng bảo mật!</td>
-        </tr>
+        <tr class="font-bold text-sm bg-slate-50"><td class="border border-black px-2 py-1 text-center">TỔNG LƯƠNG</td><td class="border border-black px-2 py-1"></td><td class="border border-black px-2 py-1"></td><td class="border border-black px-2 py-1 text-right">${fmtNum(res.grossRounded)}</td></tr>
+        <tr class="font-bold bg-slate-100"><td class="border border-black px-2 py-1 text-center">Các khoản giảm trừ</td><td class="border border-black px-2 py-1"></td><td class="border border-black px-2 py-1"></td><td class="border border-black px-2 py-1"></td></tr>
+        <tr><td class="border border-black px-2 py-0.5">Bảo hiểm xã hội ${rec.bhxhRate}%</td><td class="border border-black px-2 py-0.5"></td><td class="border border-black px-2 py-0.5"></td><td class="border border-black px-2 py-0.5 text-right">${res.bhxhRounded > 0 ? fmtNum(res.bhxhRounded) : '-'}</td></tr>
+        <tr><td class="border border-black px-2 py-0.5">Thuế TNCN</td><td class="border border-black px-2 py-0.5"></td><td class="border border-black px-2 py-0.5"></td><td class="border border-black px-2 py-0.5 text-right">${rec.taxAmount > 0 ? fmtNum(rec.taxAmount) : '-'}</td></tr>
+        <tr><td class="border border-black px-2 py-0.5">Phạt</td><td class="border border-black px-2 py-0.5"></td><td class="border border-black px-2 py-0.5"></td><td class="border border-black px-2 py-0.5 text-right">${rec.penaltyAmount > 0 ? fmtNum(rec.penaltyAmount) : '-'}</td></tr>
+        <tr class="font-bold text-sm bg-emerald-50"><td class="border border-black px-2 py-1 text-center">THỰC LĨNH</td><td class="border border-black px-2 py-1"></td><td class="border border-black px-2 py-1"></td><td class="border border-black px-2 py-1 text-right">${fmtNum(res.netRounded)}</td></tr>
+        <tr><td class="border border-black px-2 py-0.5 text-center font-semibold">Phép tồn</td><td class="border border-black px-2 py-0.5"></td><td class="border border-black px-2 py-0.5"></td><td class="border border-black px-2 py-0.5 text-right font-semibold">${rec.remainingLeave.toFixed(2)}</td></tr>
+        <tr><td colspan="4" class="border border-black py-1 text-center italic font-bold">Xin vui lòng bảo mật!</td></tr>
       `;
       document.getElementById('ps-tableBody').innerHTML = html;
     }
 
-    // --- ENHANCED CALENDAR LOGIC WITH EXACT DOBEST SPLIT SHIFTS ---
     function renderCalendar() {
       const grid = document.getElementById('calendarGrid');
       const [yr, mo] = state.currentMonth.split('-').map(Number);
@@ -1053,49 +623,30 @@
       rec.calendarDays = rec.calendarDays || {};
 
       let html = '';
-      for (let i = 0; i < firstDay; i++) {
-        html += `<div class="p-2 rounded-xl bg-slate-100/50 dark:bg-slate-900/30"></div>`;
-      }
+      for (let i = 0; i < firstDay; i++) html += `<div class="p-2 rounded-xl bg-slate-100/50 dark:bg-slate-900/30"></div>`;
 
       for (let d = 1; d <= daysInMonth; d++) {
-        const dateObj = new Date(yr, mo - 1, d);
-        const dow = dateObj.getDay();
+        const dow = new Date(yr, mo - 1, d).getDay();
         const dData = rec.calendarDays[d];
-        let badge = '';
-        let borderClass = 'border-slate-200 dark:border-slate-800';
+        let badge = '', borderClass = 'border-slate-200 dark:border-slate-800';
 
         if (dData && hasWorkHours(dData)) {
-          if (dData.regNight > 0 || dData.sunNight > 0) {
-            borderClass = 'border-indigo-400 dark:border-indigo-600 bg-indigo-50/40 dark:bg-indigo-950/30';
-          } else {
-            borderClass = 'border-blue-400 dark:border-blue-600 bg-blue-50/40 dark:bg-blue-950/30';
-          }
-
+          borderClass = (dData.regNight > 0 || dData.sunNight > 0) ? 'border-indigo-400 bg-indigo-50/40' : 'border-blue-400 bg-blue-50/40';
           let summaryArr = [];
           if (dData.regDay > 0) summaryArr.push(`${dData.regDay}h ngày`);
-          if (dData.regNight > 0) summaryArr.push(`<span class="text-indigo-600 dark:text-indigo-400 font-bold">${dData.regNight}h đêm</span>`);
+          if (dData.regNight > 0) summaryArr.push(`<span class="text-indigo-600 font-bold">${dData.regNight}h đêm</span>`);
           if (dData.sunDay > 0) summaryArr.push(`${dData.sunDay}h CN`);
           if (dData.sunNight > 0) summaryArr.push(`${dData.sunNight}h đêm CN`);
           if (dData.paidLeave > 0) summaryArr.push(`8h phép`);
           if (dData.paidHoliday > 0) summaryArr.push(`8h lễ`);
-
           let otTotal = (dData.otDay || 0) + (dData.otNight || 0) + (dData.sunOtDay || 0) + (dData.sunOtNight || 0);
-          let otBadge = otTotal > 0 ? `<div class="text-[10px] font-bold text-amber-600 dark:text-amber-400">+${otTotal}h OT</div>` : '';
-
-          badge = `
-            <div class="mt-1 text-[10px] leading-tight text-slate-700 dark:text-slate-300">
-              ${summaryArr.join(' + ') || 'Có công'}
-              ${otBadge}
-            </div>
-          `;
+          let otBadge = otTotal > 0 ? `<div class="text-[10px] font-bold text-amber-600">+${otTotal}h OT</div>` : '';
+          badge = `<div class="mt-1 text-[10px] leading-tight text-slate-700 dark:text-slate-300">${summaryArr.join(' + ') || 'Có công'}${otBadge}</div>`;
         }
 
         html += `
           <button onclick="openDayModal(${d})" class="p-2 min-h-[76px] rounded-xl border ${borderClass} hover:border-blue-500 transition flex flex-col justify-between text-left bg-white dark:bg-slate-900 shadow-sm">
-            <div class="flex justify-between items-center w-full">
-              <span class="text-xs font-bold ${dow === 0 ? 'text-rose-500' : ''}">${d}</span>
-              ${dData?.note ? '<span class="w-2 h-2 rounded-full bg-emerald-500" title="' + dData.note + '"></span>' : ''}
-            </div>
+            <div class="flex justify-between items-center w-full"><span class="text-xs font-bold ${dow === 0 ? 'text-rose-500' : ''}">${d}</span>${dData?.note ? '<span class="w-2 h-2 rounded-full bg-emerald-500"></span>' : ''}</div>
             ${badge || '<span class="text-[10px] text-slate-400">Nghỉ / Chưa</span>'}
           </button>
         `;
@@ -1113,21 +664,11 @@
       selectedCalendarDay = day;
       const [yr, mo] = state.currentMonth.split('-').map(Number);
       const dow = new Date(yr, mo - 1, day).getDay();
-      const rec = state.monthsData[state.currentMonth];
-      const existing = rec.calendarDays[day] || {};
+      const existing = state.monthsData[state.currentMonth].calendarDays[day] || {};
 
       document.getElementById('modalDayTitle').textContent = `Chấm công Ngày ${day}/${mo}/${yr} (${dow === 0 ? 'Chủ Nhật' : 'Thứ ' + (dow + 1)})`;
-
-      document.getElementById('m_regDay').value = existing.regDay ?? 0;
-      document.getElementById('m_regNight').value = existing.regNight ?? 0;
-      document.getElementById('m_otDay').value = existing.otDay ?? 0;
-      document.getElementById('m_otNight').value = existing.otNight ?? 0;
-      document.getElementById('m_sunDay').value = existing.sunDay ?? 0;
-      document.getElementById('m_sunNight').value = existing.sunNight ?? 0;
-      document.getElementById('m_sunOtDay').value = existing.sunOtDay ?? 0;
-      document.getElementById('m_sunOtNight').value = existing.sunOtNight ?? 0;
-      document.getElementById('m_paidLeave').value = existing.paidLeave ?? 0;
-      document.getElementById('m_paidHoliday').value = existing.paidHoliday ?? 0;
+      const ids = ['regDay','regNight','otDay','otNight','sunDay','sunNight','sunOtDay','sunOtNight','paidLeave','paidHoliday'];
+      ids.forEach(k => document.getElementById('m_'+k).value = existing[k] ?? 0);
       document.getElementById('m_note').value = existing.note || '';
 
       updateModalTotal();
@@ -1135,63 +676,32 @@
     }
 
     function applyPreset(presetType) {
-      document.getElementById('m_regDay').value = 0;
-      document.getElementById('m_regNight').value = 0;
-      document.getElementById('m_otDay').value = 0;
-      document.getElementById('m_otNight').value = 0;
-      document.getElementById('m_sunDay').value = 0;
-      document.getElementById('m_sunNight').value = 0;
-      document.getElementById('m_sunOtDay').value = 0;
-      document.getElementById('m_sunOtNight').value = 0;
-      document.getElementById('m_paidLeave').value = 0;
-      document.getElementById('m_paidHoliday').value = 0;
-
-      if (presetType === 'day') {
-        document.getElementById('m_regDay').value = 8;
-      } else if (presetType === 'night') {
-        // EXACT DOBEST NIGHT SHIFT SPLIT:
-        // 20h - 22h = 2 hours ngày (100%)
-        // 22h - 05h = 6 hours ca đêm (130%)
-        document.getElementById('m_regDay').value = 2;
-        document.getElementById('m_regNight').value = 6;
-      } else if (presetType === 'sunday_day') {
-        document.getElementById('m_sunDay').value = 8;
-      } else if (presetType === 'sunday_night') {
-        document.getElementById('m_sunDay').value = 2;
-        document.getElementById('m_sunNight').value = 6;
-      } else if (presetType === 'leave_paid') {
-        document.getElementById('m_paidLeave').value = 8;
-      }
+      const ids = ['regDay','regNight','otDay','otNight','sunDay','sunNight','sunOtDay','sunOtNight','paidLeave','paidHoliday'];
+      ids.forEach(k => document.getElementById('m_'+k).value = 0);
+      if (presetType === 'day') document.getElementById('m_regDay').value = 8;
+      else if (presetType === 'night') { document.getElementById('m_regDay').value = 2; document.getElementById('m_regNight').value = 6; }
+      else if (presetType === 'sunday_day') document.getElementById('m_sunDay').value = 8;
+      else if (presetType === 'sunday_night') { document.getElementById('m_sunDay').value = 2; document.getElementById('m_sunNight').value = 6; }
+      else if (presetType === 'leave_paid') document.getElementById('m_paidLeave').value = 8;
       updateModalTotal();
     }
 
     function updateModalTotal() {
-      const keys = ['regDay', 'regNight', 'otDay', 'otNight', 'sunDay', 'sunNight', 'sunOtDay', 'sunOtNight', 'paidLeave', 'paidHoliday'];
-      let sum = 0;
-      keys.forEach(k => {
-        sum += (parseFloat(document.getElementById(`m_${k}`)?.value) || 0);
-      });
+      const keys = ['regDay','regNight','otDay','otNight','sunDay','sunNight','sunOtDay','sunOtNight','paidLeave','paidHoliday'];
+      let sum = 0; keys.forEach(k => sum += (parseFloat(document.getElementById(`m_${k}`)?.value) || 0));
       document.getElementById('modalTotalHoursBadge').textContent = `Tổng: ${sum.toFixed(1)}h`;
     }
 
     function clearCurrentDay() {
       if (!selectedCalendarDay) return;
-      const rec = state.monthsData[state.currentMonth];
-      delete rec.calendarDays[selectedCalendarDay];
-      closeDayModal();
-      renderCalendar();
-      saveAndCalc();
+      delete state.monthsData[state.currentMonth].calendarDays[selectedCalendarDay];
+      closeDayModal(); renderCalendar(); saveAndCalc(true);
     }
-
-    function closeDayModal() {
-      document.getElementById('dayEditorModal').classList.add('hidden');
-      selectedCalendarDay = null;
-    }
-
+    function closeDayModal() { document.getElementById('dayEditorModal').classList.add('hidden'); selectedCalendarDay = null; }
+    
     function saveDayAttendance() {
       if (!selectedCalendarDay) return;
-      const rec = state.monthsData[state.currentMonth];
-      rec.calendarDays[selectedCalendarDay] = {
+      state.monthsData[state.currentMonth].calendarDays[selectedCalendarDay] = {
         regDay: parseFloat(document.getElementById('m_regDay').value) || 0,
         regNight: parseFloat(document.getElementById('m_regNight').value) || 0,
         otDay: parseFloat(document.getElementById('m_otDay').value) || 0,
@@ -1204,9 +714,7 @@
         paidHoliday: parseFloat(document.getElementById('m_paidHoliday').value) || 0,
         note: document.getElementById('m_note').value.trim()
       };
-      closeDayModal();
-      renderCalendar();
-      saveAndCalc();
+      closeDayModal(); renderCalendar(); saveAndCalc(true);
     }
 
     function quickFillFullMonth(mode) {
@@ -1217,182 +725,92 @@
 
       for (let d = 1; d <= daysInMonth; d++) {
         const dow = new Date(yr, mo - 1, d).getDay();
-        if (dow !== 0) { // Thứ 2 đến Thứ 7
-          if (mode === 'day') {
-            rec.calendarDays[d] = { regDay: 8, regNight: 0, otDay: 0, otNight: 0, sunDay: 0, sunNight: 0, sunOtDay: 0, sunOtNight: 0, paidLeave: 0, paidHoliday: 0, note: '' };
-          } else if (mode === 'night') {
-            // Tự động phân bổ đúng 2h ngày (20h-22h) + 6h đêm (22h-5h)
-            rec.calendarDays[d] = { regDay: 2, regNight: 6, otDay: 0, otNight: 0, sunDay: 0, sunNight: 0, sunOtDay: 0, sunOtNight: 0, paidLeave: 0, paidHoliday: 0, note: '' };
-          }
+        if (dow !== 0) {
+          if (mode === 'day') rec.calendarDays[d] = { regDay: 8, regNight: 0, otDay: 0, otNight: 0, sunDay: 0, sunNight: 0, sunOtDay: 0, sunOtNight: 0, paidLeave: 0, paidHoliday: 0, note: '' };
+          else if (mode === 'night') rec.calendarDays[d] = { regDay: 2, regNight: 6, otDay: 0, otNight: 0, sunDay: 0, sunNight: 0, sunOtDay: 0, sunOtNight: 0, paidLeave: 0, paidHoliday: 0, note: '' };
         }
       }
-      renderCalendar();
-      saveAndCalc();
+      renderCalendar(); saveAndCalc(true);
     }
 
     function syncCalendarToSalary() {
       const rec = state.monthsData[state.currentMonth];
       const days = Object.values(rec.calendarDays || {});
-      if (days.length === 0) {
-        alert('Chưa có dữ liệu chấm công trên lịch! Hãy chấm công hoặc bấm Điền nhanh trước.');
-        return;
-      }
+      if (days.length === 0) { alert('Chưa có dữ liệu chấm công trên lịch!'); return; }
 
-      // Reset hours before summing
       OFFICIAL_ITEMS.forEach(i => rec.officialHours[i.key] = 0);
-
       days.forEach(d => {
-        rec.officialHours.regDay += (d.regDay || 0);
-        rec.officialHours.regNight += (d.regNight || 0);
-        rec.officialHours.otDay += (d.otDay || 0);
-        rec.officialHours.otNight += (d.otNight || 0);
-        rec.officialHours.sunDay += (d.sunDay || 0);
-        rec.officialHours.sunNight += (d.sunNight || 0);
-        rec.officialHours.sunOtDay += (d.sunOtDay || 0);
-        rec.officialHours.sunOtNight += (d.sunOtNight || 0);
-        rec.officialHours.paidLeave += (d.paidLeave || 0);
-        rec.officialHours.paidHoliday += (d.paidHoliday || 0);
+        rec.officialHours.regDay += (d.regDay || 0); rec.officialHours.regNight += (d.regNight || 0);
+        rec.officialHours.otDay += (d.otDay || 0); rec.officialHours.otNight += (d.otNight || 0);
+        rec.officialHours.sunDay += (d.sunDay || 0); rec.officialHours.sunNight += (d.sunNight || 0);
+        rec.officialHours.sunOtDay += (d.sunOtDay || 0); rec.officialHours.sunOtNight += (d.sunOtNight || 0);
+        rec.officialHours.paidLeave += (d.paidLeave || 0); rec.officialHours.paidHoliday += (d.paidHoliday || 0);
       });
-
-      loadMonthToUI();
-      saveAndCalc();
-      switchTab('dashboard');
+      loadMonthToUI(); saveAndCalc(true); switchTab('dashboard');
     }
 
     function updateChartsAndAnalytics(rec, res) {
       updateGoalPlanner();
       const ctx = document.getElementById('incomePieChart');
       if (!ctx) return;
+      const dataVals = [res.workingSalaryRounded - res.otMoneyRounded, res.otMoneyRounded, res.allowanceSum];
 
-      const regMoney = res.workingSalaryRounded - res.otMoneyRounded;
-      const dataVals = [regMoney, res.otMoneyRounded, res.allowanceSum];
-
-      if (pieChartInstance) {
-        pieChartInstance.data.datasets[0].data = dataVals;
-        pieChartInstance.update();
-      } else {
+      if (pieChartInstance) { pieChartInstance.data.datasets[0].data = dataVals; pieChartInstance.update(); }
+      else {
         pieChartInstance = new Chart(ctx, {
-          type: 'doughnut',
-          data: {
-            labels: ['Lương Giờ Chuẩn & Phép', 'Lương Tăng Ca & Chủ Nhật', 'Phụ Cấp & Thưởng'],
-            datasets: [{
-              data: dataVals,
-              backgroundColor: ['#3b82f6', '#f59e0b', '#10b981'],
-              borderWidth: 0
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { position: 'bottom' }
-            }
-          }
+          type: 'doughnut', data: { labels: ['Lương Chuẩn', 'Lương OT/CN', 'Phụ Cấp & Thưởng'], datasets: [{ data: dataVals, backgroundColor: ['#3b82f6', '#f59e0b', '#10b981'], borderWidth: 0 }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
         });
       }
     }
 
     function updateGoalPlanner() {
-      const rec = state.monthsData[state.currentMonth];
-      const res = calculateMonth(rec);
+      const res = calculateMonth(state.monthsData[state.currentMonth]);
       const targetNet = parseFloat(document.getElementById('targetNetInput').value) || 0;
       const diff = targetNet - res.netRounded;
       const box = document.getElementById('goalResultBox');
 
-      if (diff <= 0) {
-        box.innerHTML = `
-          <div class="font-bold text-emerald-600 dark:text-emerald-400">
-            🎉 Xin chúc mừng! Thu nhập Thực Lĩnh hiện tại (${fmtVND(res.netRounded)}) đã vượt mục tiêu ${fmtVND(Math.abs(diff))}!
-          </div>
-        `;
-      } else {
-        const otDayRate = res.exactHourly * 1.5;
-        const sunRate = res.exactHourly * 2.0;
-        const neededOtHours = (diff / otDayRate).toFixed(1);
-        const neededSunDays = (diff / (sunRate * 8)).toFixed(1);
-        box.innerHTML = `
-          <div class="font-semibold text-slate-700 dark:text-slate-200">
-            Bạn còn thiếu <span class="text-rose-600 font-extrabold">${fmtVND(diff)}</span> để đạt mục tiêu ${fmtVND(targetNet)}.
-          </div>
-          <ul class="list-disc list-inside text-xs space-y-1 text-slate-600 dark:text-slate-300 pt-1">
-            <li>Cần làm thêm khoảng <b>${neededOtHours} giờ</b> Tăng ca ngày (150% = ${fmtNum(otDayRate)} ₫/h)</li>
-            <li>Hoặc làm thêm khoảng <b>${neededSunDays} ngày Chủ Nhật</b> (8h/ngày × 200%)</li>
-          </ul>
-        `;
+      if (diff <= 0) box.innerHTML = `<div class="font-bold text-emerald-600">🎉 Vượt mục tiêu ${fmtVND(Math.abs(diff))}!</div>`;
+      else {
+        const neededOtHours = (diff / (res.exactHourly * 1.5)).toFixed(1);
+        const neededSunDays = (diff / (res.exactHourly * 2.0 * 8)).toFixed(1);
+        box.innerHTML = `<div class="font-semibold text-slate-700">Thiếu <span class="text-rose-600 font-extrabold">${fmtVND(diff)}</span></div>
+          <ul class="list-disc list-inside text-xs mt-1"><li>Cần làm thêm <b>${neededOtHours} giờ</b> Tăng ca ngày</li><li>Hoặc <b>${neededSunDays} ngày</b> Chủ Nhật (8h)</li></ul>`;
       }
     }
 
     function switchTab(tabName) {
       ['dashboard', 'calendar', 'payslip', 'analytics'].forEach(t => {
         document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tabName);
-        const btn = document.getElementById(`tab-btn-${t}`);
-        if (t === tabName) {
-          btn.className = 'tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 flex items-center gap-2 whitespace-nowrap';
-        } else {
-          btn.className = 'tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 whitespace-nowrap';
-        }
+        document.getElementById(`tab-btn-${t}`).className = t === tabName ? 'tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-blue-600 text-blue-600 flex items-center gap-2 whitespace-nowrap' : 'tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 whitespace-nowrap';
       });
     }
 
-    function resetToSampleSep2026() {
-      state.monthsData[state.currentMonth] = getDefaultMonthRecord();
-      loadMonthToUI();
-      saveAndCalc();
-    }
-
-    function toggleDarkMode() {
-      document.documentElement.classList.toggle('dark');
-    }
+    function resetToSampleSep2026() { state.monthsData[state.currentMonth] = getDefaultMonthRecord(); loadMonthToUI(); saveAndCalc(true); }
+    function toggleDarkMode() { document.documentElement.classList.toggle('dark'); }
 
     function exportCSV() {
-      const rec = state.monthsData[state.currentMonth];
-      const res = calculateMonth(rec);
+      const rec = state.monthsData[state.currentMonth]; const res = calculateMonth(rec);
       let csv = '\uFEFFKhoản mục,Số giờ,Đơn giá (VNĐ),Thành tiền (VNĐ)\n';
-      res.officialBreakdown.forEach(b => {
-        csv += `"${b.label}",${b.hrs},${b.unitRounded},${b.lineRounded}\n`;
-      });
-      ALLOWANCE_ITEMS.forEach(a => {
-        csv += `"Phụ cấp: ${a.label}",-, -,${rec.allowances[a.key] || 0}\n`;
-      });
-      csv += `"TỔNG LƯƠNG (GROSS)",,,${res.grossRounded}\n`;
-      csv += `"Trừ BHXH (${rec.bhxhRate}%)",,,-${res.bhxhRounded}\n`;
-      csv += `"THỰC LĨNH (NET)",,,${res.netRounded}\n`;
-
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Phieu_Luong_DOBEST_${state.currentMonth}.csv`;
-      a.click();
+      res.officialBreakdown.forEach(b => csv += `"${b.label}",${b.hrs},${b.unitRounded},${b.lineRounded}\n`);
+      ALLOWANCE_ITEMS.forEach(a => csv += `"Phụ cấp: ${a.label}",-, -,${rec.allowances[a.key] || 0}\n`);
+      csv += `"TỔNG LƯƠNG (GROSS)",,,${res.grossRounded}\n"Trừ BHXH (${rec.bhxhRate}%)",,,-${res.bhxhRounded}\n"THỰC LĨNH (NET)",,,${res.netRounded}\n`;
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+      a.download = `Phieu_Luong_DOBEST_${state.currentMonth}.csv`; a.click();
     }
 
     function exportBackup() {
-      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `DOBEST_Salary_Backup_${state.currentMonth}.json`;
-      a.click();
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' }));
+      a.download = `DOBEST_Salary_Backup_${state.currentMonth}.json`; a.click();
     }
 
     function importBackup(event) {
-      const file = event.target.files[0];
-      if (!file) return;
+      const file = event.target.files[0]; if (!file) return;
       const reader = new FileReader();
       reader.onload = (e) => {
-        try {
-          const imported = JSON.parse(e.target.result);
-          if (imported && imported.monthsData) {
-            state = imported;
-            loadMonthToUI();
-            saveAndCalc();
-            alert('Khôi phục dữ liệu thành công!');
-          }
-        } catch (err) {
-          alert('File sao lưu không hợp lệ!');
-        }
-      };
-      reader.readAsText(file);
+        try { const imported = JSON.parse(e.target.result); if (imported && imported.monthsData) { state = imported; loadMonthToUI(); saveAndCalc(true); alert('Khôi phục thành công!'); } } 
+        catch (err) { alert('File lỗi!'); }
+      }; reader.readAsText(file);
     }
 
     window.addEventListener('DOMContentLoaded', initApp);
