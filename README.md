@@ -1,1 +1,1 @@
-# DOBEST SALARY PRO V5 (Mobile & Multi-User Admin)\nQuản lý đa nhân sự lưu Firebase. Giao diện iPhone tối ưu.
+# DOBEST SALARY PRO V5.1 (Fixed)\nĐã sửa lỗi ngắt dòng JavaScript gây sập trình duyệt.

@@ -57,7 +57,7 @@
           <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-extrabold text-base sm:text-lg shadow-md">DB</div>
           <div>
             <h1 class="text-base sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
-              DOBEST PRO <span class="text-[10px] sm:text-xs bg-emerald-500 text-white px-1.5 py-0.5 rounded-full relative -top-0.5">V5 Admin</span>
+              DOBEST PRO <span class="text-[10px] sm:text-xs bg-emerald-500 text-white px-1.5 py-0.5 rounded-full relative -top-0.5">V5.1 Admin</span>
             </h1>
             
             <!-- Employee Dropdown for Mobile/Desktop -->
@@ -748,16 +748,10 @@
 
     function exportCSV() {
       const rec = state.monthsData[state.currentMonth]; const res = calculateMonth(rec);
-      let csv = '﻿Khoản mục,Số giờ,Đơn giá (VNĐ),Thành tiền (VNĐ)
-';
-      res.officialBreakdown.forEach(b => csv += `"${b.label}",${b.hrs},${b.unitRounded},${b.lineRounded}
-`);
-      ALLOWANCE_ITEMS.forEach(a => csv += `"Phụ cấp: ${a.label}",-, -,${rec.allowances[a.key] || 0}
-`);
-      csv += `"TỔNG LƯƠNG (GROSS)",,,${res.grossRounded}
-"Trừ BHXH (${rec.bhxhRate}%)",,,-${res.bhxhRounded}
-"THỰC LĨNH (NET)",,,${res.netRounded}
-`;
+      let csv = '\uFEFFKhoản mục,Số giờ,Đơn giá (VNĐ),Thành tiền (VNĐ)\n';
+      res.officialBreakdown.forEach(b => csv += `"${b.label}",${b.hrs},${b.unitRounded},${b.lineRounded}\n`);
+      ALLOWANCE_ITEMS.forEach(a => csv += `"Phụ cấp: ${a.label}",-, -,${rec.allowances[a.key] || 0}\n`);
+      csv += `"TỔNG LƯƠNG (GROSS)",,,${res.grossRounded}\n"Trừ BHXH (${rec.bhxhRate}%)",,,-${res.bhxhRounded}\n"THỰC LĨNH (NET)",,,${res.netRounded}\n`;
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
       a.download = `Phieu_Luong_${currentEmpId}_${state.currentMonth}.csv`; a.click();
     }
