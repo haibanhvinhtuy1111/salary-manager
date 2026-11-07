@@ -1,3 +1,489 @@
+
+Gemini
+
+Cuộc trò chuyện mới
+Thư viện
+Đã lên lịch
+Sinh viên
+
+Hiện thêm
+Sổ ghi chú mới
+Hướng Dẫn Tạo Web Lương
+Khắc phục lỗi build Vercel
+Cách cài tiện ích trên Brave
+Obama có tranh cử 2026?
+Chuyển đổi mã nguồn App.js sang JavaScript thuần
+Xây dựng app iOS lọc ảnh Hayho
+Tư vấn sử dụng thuốc giảm đau Ibuprofen
+Thời hạn vô hiệu hóa Zalo
+Tính Giờ Công Cth Giang
+Thiếu thông tin tính lương tháng 10
+Đếm Số Lượng Dây Liệu
+Đếm Số Lượng Linh Kiện
+Thay đổi vòng 1 khi mang thai
+Ý nghĩa tục lệ không đón dâu
+Hướng Dẫn Kiểm Tra Thông Số Laptop
+Khắc phục lỗi công thức SUMIF trả về 0
+Xoá Nền Logo Trường
+Nhận diện phông chữ
+Personalized Bento Box Curation
+Khắc phục lỗi font SVN-Times New Roman
+Khắc Phục Lỗi Font Chữ Tiếng Việt
+Đổi âm thanh máy iData
+Khắc phục lỗi không bấm được Alt A
+Dịch Câu Tiếng Trung Công Việc
+Điều kiện hoàn hàng khi vứt vỏ bao
+Lọc và tìm điểm ngắt quãng dãy số
+Từ chối gọi điện cho bà
+Số Lượng Màn Candy Crush
+Nguyên nhân và cách xử lý tình trạng tiểu rắt
+Code Python tự động vẽ hình
+Cách Gỡ Cài Đặt Candy Crush
+Khắc phục mất dữ liệu khi gộp ô
+Nhận diện game Tam Quốc
+Ngân sách 9 triệu ăn uống 2 vợ chồng
+Trò chuyện với Gemini
+mình muốn tạo một trang web quản lý lương và chấm công cá nhân dựa trên bảng chấm công đó , mình sẽ đẩy lên github và kết nối với vercel bạn hãy code và hướng dẫn mình cài projects này nhé , yêu cầu tối ưu , nhiều chức năng và xịn nhất
+
+Chào bạn, dựa trên cấu trúc phiếu lương chi tiết của công ty DOBEST và các tài khoản GitHub, Vercel bạn đã sẵn sàng, mình sẽ hướng dẫn bạn xây dựng một ứng dụng web Quản lý Lương & Chấm Công cá nhân.   
+image_41b2d4.jpg
++ 2
+
+Dự án này sẽ sử dụng Next.js (React) + Tailwind CSS để đảm bảo giao diện hiện đại, tối ưu tốc độ và dễ dàng mở rộng thêm chức năng lưu trữ (database) sau này. Dưới đây là quy trình từ A-Z.
+
+Phần 1: Khởi tạo dự án Next.js (Local)
+Mở Terminal (Command Prompt / PowerShell / Git Bash) trên máy tính của bạn và chạy lệnh sau để tạo dự án:
+
+Bash
+npx create-next-app@latest my-salary-manager
+Khi được hỏi, hãy chọn các cấu hình sau (nhấn Enter để chọn mặc định):
+
+Would you like to use TypeScript? Yes
+
+Would you like to use ESLint? Yes
+
+Would you like to use Tailwind CSS? Yes
+
+Would you like to use src/ directory? Yes
+
+Would you like to use App Router? Yes
+
+Would you like to customize the default import alias? No
+
+Di chuyển vào thư mục dự án và cài đặt thêm icon:
+
+Bash
+cd my-salary-manager
+npm install lucide-react
+Phần 2: Viết Code Logic và Giao Diện
+Mở thư mục dự án bằng VS Code, tìm đến file src/app/page.tsx, xóa toàn bộ code cũ và dán đoạn code này vào. Mã nguồn này đã được thiết lập sẵn công thức nhân hệ số (130%, 150%, 200%, v.v.) và các khoản phụ cấp chính xác theo phiếu lương DOBEST của bạn.   
+image_41b2d4.jpg
+
+TypeScript
+"use client";
+
+import { useState, useEffect } from "react";
+import { Calculator, DollarSign, Clock, CalendarCheck } from "lucide-react";
+
+export default function SalaryManager() {
+  const [baseSalary, setBaseSalary] = useState(6000000);
+  const [standardHours, setStandardHours] = useState(208);
+
+  // Nhóm giờ công
+  const [hours, setHours] = useState({
+    regular: 184, // Hành chính 100%
+    night: 0,     // Hành chính ca đêm 130%
+    otDay: 57,    // Tăng ca ngày 150%
+    otNight: 0,   // Tăng ca đêm 200%
+    sundayDay: 24,// Ngày chủ nhật 200%
+    sundayOt: 3,  // Tăng ca ngày CN 200%
+    sundayNight: 0, // Đêm chủ nhật 250%
+    sundayNightOt: 0, // Tăng ca đêm CN 270%
+    holiday: 0,   // Ngày lễ 300%
+    holidayNight: 0, // Đêm lễ 330%
+    paidLeave70: 0, // Nghỉ hưởng 70%
+    paidHoliday: 16, // Ngày lễ hưởng lương 100%
+    paidLeave: 8,   // Nghỉ phép có lương 100%
+  });
+
+  // Nhóm phụ cấp
+  const [allowances, setAllowances] = useState({
+    phone: 400000,
+    kpi: 500000,
+    gas: 500000,
+    attendance: 600000,
+    housing: 500000,
+    food: 120000,
+    bonus: 100000,
+  });
+
+  const [insuranceRate, setInsuranceRate] = useState(10.5);
+
+  const formatVND = (amount: number) => {
+    return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
+  };
+
+  const hourlyRate = Math.round(baseSalary / standardHours);
+
+  // Tính toán lương từng khoản
+  const calcItems = [
+    { label: "Giờ hành chính 100%", hours: hours.regular, rate: 1, total: Math.round(hours.regular * hourlyRate * 1) },
+    { label: "Ca đêm 130%", hours: hours.night, rate: 1.3, total: Math.round(hours.night * hourlyRate * 1.3) },
+    { label: "Tăng ca ngày 150%", hours: hours.otDay, rate: 1.5, total: Math.round(hours.otDay * hourlyRate * 1.5) },
+    { label: "Tăng ca đêm 200%", hours: hours.otNight, rate: 2, total: Math.round(hours.otNight * hourlyRate * 2) },
+    { label: "Làm ngày CN 200%", hours: hours.sundayDay, rate: 2, total: Math.round(hours.sundayDay * hourlyRate * 2) },
+    { label: "Tăng ca ngày CN 200%", hours: hours.sundayOt, rate: 2, total: Math.round(hours.sundayOt * hourlyRate * 2) },
+    { label: "Làm đêm CN 250%", hours: hours.sundayNight, rate: 2.5, total: Math.round(hours.sundayNight * hourlyRate * 2.5) },
+    { label: "Tăng ca đêm CN 270%", hours: hours.sundayNightOt, rate: 2.7, total: Math.round(hours.sundayNightOt * hourlyRate * 2.7) },
+    { label: "Ngày lễ 300%", hours: hours.holiday, rate: 3, total: Math.round(hours.holiday * hourlyRate * 3) },
+    { label: "Đêm lễ 330%", hours: hours.holidayNight, rate: 3.3, total: Math.round(hours.holidayNight * hourlyRate * 3.3) },
+    { label: "Nghỉ hưởng 70%", hours: hours.paidLeave70, rate: 0.7, total: Math.round(hours.paidLeave70 * hourlyRate * 0.7) },
+    { label: "Lễ hưởng lương 100%", hours: hours.paidHoliday, rate: 1, total: Math.round(hours.paidHoliday * hourlyRate * 1) },
+    { label: "Phép có lương 100%", hours: hours.paidLeave, rate: 1, total: Math.round(hours.paidLeave * hourlyRate * 1) },
+  ];
+
+  const totalWorkingSalary = calcItems.reduce((sum, item) => sum + item.total, 0);
+  const totalAllowances = Object.values(allowances).reduce((sum, val) => sum + val, 0);
+  const grossSalary = totalWorkingSalary + totalAllowances;
+  const insuranceDeduction = Math.round((baseSalary * insuranceRate) / 100);
+  const netSalary = grossSalary - insuranceDeduction;
+
+  const handleHourChange = (key: keyof typeof hours, value: string) => {
+    setHours({ ...hours, [key]: Number(value) || 0 });
+  };
+
+  const handleAllowanceChange = (key: keyof typeof allowances, value: string) => {
+    setAllowances({ ...allowances, [key]: Number(value) || 0 });
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8 text-slate-800">
+      <header className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-blue-700 flex items-center gap-2">
+            <Calculator className="w-8 h-8" /> DOBEST - Quản Lý Chấm Công
+          </h1>
+          <p className="text-gray-500 mt-1">Phạm Ngọc Hải (DB0351)</p>
+        </div>
+      </header>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Cột 1: Nhập Giờ Công */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-indigo-600">
+            <Clock className="w-5 h-5" /> Nhập Số Giờ Công
+          </h2>
+          <div className="grid gap-3">
+            {Object.keys(hours).map((key, index) => (
+              <div key={key} className="flex justify-between items-center">
+                <label className="text-sm font-medium text-gray-700">{calcItems[index].label}</label>
+                <input
+                  type="number"
+                  className="w-24 px-3 py-1.5 border rounded-lg text-right focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={hours[key as keyof typeof hours]}
+                  onChange={(e) => handleHourChange(key as keyof typeof hours, e.target.value)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Cột 2: Phụ Cấp & Cài Đặt */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-fit">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-green-600">
+            <CalendarCheck className="w-5 h-5" /> Phụ Cấp & Khấu Trừ
+          </h2>
+          <div className="space-y-4 mb-6">
+            <div className="flex justify-between items-center bg-gray-50 p-2 rounded">
+              <span className="text-sm">Lương cơ bản</span>
+              <input type="number" className="w-32 px-2 py-1 border rounded text-right" value={baseSalary} onChange={(e) => setBaseSalary(Number(e.target.value))} />
+            </div>
+            <div className="flex justify-between items-center bg-gray-50 p-2 rounded">
+              <span className="text-sm">Bảo hiểm (%)</span>
+              <input type="number" step="0.1" className="w-20 px-2 py-1 border rounded text-right" value={insuranceRate} onChange={(e) => setInsuranceRate(Number(e.target.value))} />
+            </div>
+          </div>
+          <div className="grid gap-3 border-t pt-4">
+            {Object.entries({
+              phone: "Điện thoại", kpi: "Thưởng KPI", gas: "Xăng xe", 
+              attendance: "Chuyên cần", housing: "Nhà ở", food: "Tiền ăn", bonus: "Thưởng khác"
+            }).map(([key, label]) => (
+              <div key={key} className="flex justify-between items-center">
+                <label className="text-sm font-medium text-gray-700">{label}</label>
+                <input
+                  type="number"
+                  className="w-32 px-3 py-1.5 border rounded-lg text-right focus:ring-2 focus:ring-green-500 outline-none"
+                  value={allowances[key as keyof typeof allowances]}
+                  onChange={(e) => handleAllowanceChange(key as keyof typeof allowances, e.target.value)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Cột 3: Tổng Kết Lương */}
+        <div className="bg-blue-900 text-white p-6 rounded-xl shadow-lg h-fit sticky top-8">
+          <h2 className="text-xl font-semibold mb-6 flex items-center gap-2 text-blue-100">
+            <DollarSign className="w-6 h-6" /> Tổng Kết Lương
+          </h2>
+          
+          <div className="space-y-4 text-blue-50">
+            <div className="flex justify-between border-b border-blue-700 pb-2">
+              <span>Đơn giá giờ chuẩn</span>
+              <span className="font-semibold">{formatVND(hourlyRate)}/h</span>
+            </div>
+            <div className="flex justify-between border-b border-blue-700 pb-2">
+              <span>Tổng lương giờ công</span>
+              <span className="font-semibold">{formatVND(totalWorkingSalary)}</span>
+            </div>
+            <div className="flex justify-between border-b border-blue-700 pb-2">
+              <span>Tổng phụ cấp</span>
+              <span className="font-semibold">{formatVND(totalAllowances)}</span>
+            </div>
+            <div className="flex justify-between text-lg pt-2">
+              <span>TỔNG LƯƠNG</span>
+              <span className="font-bold text-yellow-300">{formatVND(grossSalary)}</span>
+            </div>
+            <div className="flex justify-between border-b border-blue-700 pb-2 text-red-300">
+              <span>Trừ BHXH ({insuranceRate}%)</span>
+              <span>- {formatVND(insuranceDeduction)}</span>
+            </div>
+            <div className="flex justify-between items-end pt-4">
+              <span className="text-xl font-medium">THỰC LĨNH</span>
+              <span className="text-3xl font-bold text-green-400">{formatVND(netSalary)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+Phần 3: Đưa dự án lên GitHub
+Từ tài khoản haibanhvinhtuy1111 của bạn trên trang chủ GitHub, hãy làm các bước sau:   
+image_42088f.png
+
+Nhấn nút + (New repository) ở góc trên bên phải màn hình.   
+image_42088f.png
+
+Đặt tên repository là salary-manager, để chế độ Public hoặc Private, rồi nhấn Create repository.
+
+Mở Terminal tại thư mục code đang làm ở Bước 1 và chạy lần lượt các lệnh sau (nhớ thay URL bằng link repo bạn vừa tạo):
+
+Bash
+git init
+git add .
+git commit -m "Khởi tạo website quản lý lương"
+git branch -M main
+git remote add origin https://github.com/haibanhvinhtuy1111/salary-manager.git
+git push -u origin main
+Phần 4: Kết nối và Deploy lên Vercel
+Truy cập Vercel dashboard của bạn ngochaipham678-5016s-projects.   
+image_41b652.png
+
+Nhấn nút Add New... -> Project ở góc trên bên phải.   
+image_41b652.png
+
+Ở mục "Import Git Repository", Vercel sẽ hiển thị danh sách các repo trên GitHub của bạn. Tìm repo salary-manager vừa tạo và nhấn Import.
+
+Các thiết lập mặc định của Vercel (Framework Preset: Next.js) đã hoàn toàn chính xác. Bạn chỉ cần kéo xuống và nhấn Deploy.
+
+Chờ khoảng 1-2 phút, Vercel sẽ cấp cho bạn một đường link .vercel.app. Bạn có thể truy cập link này trên điện thoại hoặc máy tính để tự chấm công mỗi ngày. Giao diện sẽ tự động lưu các chỉ số tính toán tức thời theo đúng form mẫu lương của bạn.
+
+Microsoft Windows [Version 10.0.19045.6466]
+
+(c) Microsoft Corporation. All rights reserved.
+
+
+
+C:\Users\admin>npx create-next-app@latest my-salary-manager
+
+'npx' is not recognized as an internal or external command,
+
+operable program or batch file.
+
+
+
+C:\Users\admin>
+
+Lỗi này xuất hiện vì máy tính của bạn chưa được cài đặt Node.js (môi trường cốt lõi để chạy các lệnh npx hoặc npm).
+
+Dưới đây là cách khắc phục để đi tiếp:
+
+Tải Node.js: Truy cập trang chủ https://nodejs.org/ và tải xuống phiên bản LTS (Recommended for most users - bản ổn định nhất).
+
+Cài đặt: Mở file vừa tải về. Bạn chỉ cần giữ nguyên các thiết lập mặc định và liên tục nhấn Next (hoặc 下一步 trên giao diện Windows tiếng Trung của bạn) cho đến khi cài đặt hoàn tất (Finish / 完成).
+
+Khởi động lại Command Prompt: Windows cần tải lại để nhận diện lệnh mới. Bạn hãy đóng hoàn toàn cửa sổ CMD hiện tại và mở lại một cửa sổ Command Prompt mới.
+
+Chạy lại lệnh: Dán lại lệnh ban đầu vào:
+
+DOS
+npx create-next-app@latest my-salary-manager
+Khi chạy lần đầu, màn hình sẽ hiện dòng chữ Ok to proceed? (y). Bạn chỉ cần gõ y rồi nhấn Enter, sau đó tiếp tục chọn các cấu hình (Yes/No) giống hệt như Phần 1 mình đã hướng dẫn.
+
+mình muốn làm trực tiếp trên github luôn bạn hãy code và đóng gói giúp mình nhé
+
+Dự án web Quản lý Lương & Chấm Công cá nhân của bạn đã được đóng gói hoàn chỉnh:
+
+Biểu tượng HTML
+index
+ HTML 
+Biểu tượng ZIP
+dobest-salary-manager
+ ZIP 
+Mình đã thiết kế bộ mã nguồn Zero-Build (không cần cài Node.js hay gõ lệnh CMD trên máy tính). Bạn chỉ cần tải file ở trên về và kéo thả trực tiếp lên giao diện web GitHub là Vercel sẽ tự động chạy ngay lập tức.   
+image_42088f.png
++ 1
+
+Điểm nổi bật của phiên bản DOBEST Salary Pro này
+Chuẩn 100% công thức Excel của Công ty TNHH DOBEST: Tự động tính đơn giá giờ công chính xác từ Lương cơ bản (6,000,000) và Giờ công chuẩn (208), khớp từng đồng cho toàn bộ 14 mục Chính thức, 14 mục Thử việc (85%), 12 khoản Phụ cấp (Điện thoại, KPI, Xăng xe, Chuyên cần, Nhà ở, Tiền ăn, Thưởng...) và Bảo hiểm xã hội 10.5%, cho ra đúng Tổng lương 12,744,038 ₫ và Thực lĩnh 12,114,038 ₫ như phiếu lương tháng 9/2026 của bạn.   
+image_41b2d4.jpg
+
+Lịch chấm công theo từng ngày (Interactive Calendar): Bấm vào từng ngày trong tháng để chọn ca làm việc (Ca ngày 100%, Ca đêm 130%, Chủ nhật 200%/250%, Lễ 300%/330%, Nghỉ phép...) và nhập số giờ tăng ca (OT). Có nút "Đồng Bộ Giờ Sang Bảng Lương" để tự động cộng dồn toàn bộ giờ công trong tháng.
+
+Chế độ Xem & In Phiếu Lương DOBEST Song Ngữ (Việt - Trung): Xuất ra bảng phiếu lương đóng khung chuẩn mẫu công ty (Tên Nhân Viên 姓名: Phạm Ngọc Hải 范玉海, Mã nhân viên 工号: DB0351) để in hoặc lưu thành PDF.   
+image_41b2d4.jpg
+
+Phân tích biểu đồ & Tính mục tiêu thu nhập (Target Planner): Nhập số tiền Thực lĩnh bạn muốn đạt trong tháng (ví dụ 15,000,000 ₫), web sẽ tự tính chính xác bạn cần tăng ca thêm bao nhiêu giờ OT ngày (150%) hoặc bao nhiêu ngày Chủ Nhật (200%).
+
+Lưu trữ đa tháng, Xuất Excel (.csv), Sao lưu/Khôi phục (.json) và Chế độ Sáng/Tối (Dark Mode).
+
+Hướng dẫn đưa trực tiếp lên GitHub & Vercel (Không cần dùng CMD)
+Bước 1: Tạo Repository trên GitHub
+Trên màn hình GitHub Dashboard (haibanhvinhtuy1111) của bạn, bấm vào dấu + ở góc trên bên phải và chọn New repository.   
+image_42088f.png
+
+Tại ô Repository name, nhập tên: dobest-salary-manager.
+
+Kéo xuống dưới cùng và bấm nút màu xanh Create repository (không cần tích chọn gì thêm).
+
+Bước 2: Tải file code lên GitHub bằng trình duyệt
+Ngay tại trang vừa tạo xong, bạn nhìn vào dòng chữ màu xanh: "…or create a new file or uploading an existing file" -> Bấm vào chữ uploading an existing file.
+
+Bạn có 2 cách kéo thả (cách nào cũng chạy mượt 100%):
+
+Cách nhanh nhất: Kéo trực tiếp file index.html vừa tải ở trên thả vào khung giữa màn hình GitHub.
+
+Cách đầy đủ: Giải nén file dobest-salary-manager.zip ra một thư mục, sau đó bôi đen cả 3 file bên trong (index.html, vercel.json, README.md) rồi kéo thả vào khung upload của GitHub (Lưu ý: kéo các file bên trong chứ không kéo cả file .zip).
+
+Đợi thanh tải lên chạy xong (khoảng 2 giây), kéo xuống dưới bấm nút màu xanh Commit changes.
+
+Bước 3: Kết nối với Vercel để lấy link Web
+Chuyển sang tab Vercel (ngochaipham678-5016s-projects) trên trình duyệt của bạn, bấm vào nút + Create New ở góc trên bên phải -> chọn Project.   
+image_41b652.png
+
+Ở danh sách Import Git Repository, bạn sẽ thấy dobest-salary-manager vừa tạo -> bấm Import.
+
+Không cần chỉnh sửa bất kỳ thông số nào, bấm thẳng nút Deploy.
+
+Chỉ sau khoảng 5 – 10 giây, Vercel sẽ báo pháo hoa chúc mừng và cấp cho bạn đường link dạng dobest-salary-manager.vercel.app. Bạn có thể mở trực tiếp ngay trên máy tính hoặc lưu ra màn hình chính iPhone để chấm công mỗi ngày!
+
+Bạn đang ở đúng trang repository trống vừa tạo. Để đưa file code lên và liên kết sang Vercel ngay trên trình duyệt:
+
+Bấm vào liên kết tải file:
+
+Trong khung màu xanh nhạt Quick setup, nhìn vào dòng chữ nhỏ bên dưới ô chứa đường link: "Get started by creating a new file or uploading an existing file."   
+image_419773.png
+
+Nhấp trực tiếp vào chữ uploading an existing file.   
+image_419773.png
+
+Tải file code lên:
+
+Kéo thả trực tiếp file index.html (hoặc giải nén file dobest-salary-manager.zip rồi kéo thả cả 3 file gồm index.html, vercel.json, README.md) vào giữa khung tải lên của GitHub.
+
+Chờ thanh tiến trình tải xong, kéo xuống cuối trang và bấm nút xanh Commit changes.
+
+Deploy trên Vercel:
+
+Nhấp chuyển sang tab Vercel (tab đầu tiên ở góc trên bên trái trình duyệt của bạn).   
+image_419773.png
+
+Bấm nút Add New... (hoặc + Create New) ở góc trên bên phải 
+→ chọn Project.   
+image_41b652.png
+
+Tại danh sách kho lưu trữ, bạn sẽ thấy xuất hiện repository salary-manager 
+→ bấm nút Import.
+
+Giữ nguyên toàn bộ cấu hình mặc định và bấm nút Deploy.
+
+Sau khoảng 10 đến 15 giây, Vercel sẽ hoàn tất triển khai và cung cấp đường link web trực tiếp để bạn truy cập sử dụng.
+
+Bạn có cần mình hướng dẫn cách thêm tính năng tự động sao lưu dữ liệu lên Supabase hoặc Google Drive không?
+
+Có
+mình làm đêm mà có 2 tiếng ngày đến 22h mới là 6 tiếng đêm thì sao mà chấm kiểu này được
+
+Đúng với thực tế ca kíp tại DOBEST: dòng phiếu lương của công ty ghi rõ "Giờ hành chính ngày 8h-17h và 20h-22h: 100%", còn ca đêm chỉ tính từ 22h-5h (130%). Việc gộp chung cả ca làm việc vào một ô chọn duy nhất sẽ khiến số giờ bị tính lệch.   
+image_41b2d4.jpg
++ 2
+
+Mình đã nâng cấp toàn diện logic bảng chấm công ngày để bóc tách độc lập từng loại giờ trong ca. Bạn có thể tải bộ mã nguồn cập nhật tại đây:
+
+Biểu tượng HTML
+index
+ HTML 
+Biểu tượng ZIP
+dobest-salary-manager
+ ZIP 
+Các thay đổi quan trọng trong bản cập nhật (V2)
+Mẫu ca nhanh "Ca Đêm Chuẩn (20h-5h)":
+
+Khi bạn bấm nút chọn "🌙 Ca Đêm Chuẩn", hệ thống sẽ tự động tách sẵn:
+
+2.0 giờ vào mục Giờ Ngày (20h-22h: 100%)   
+image_41b2d4.jpg
+
+6.0 giờ vào mục Giờ Ca Đêm (22h-5h: 130%)   
+image_41b2d4.jpg
+
+Nếu có làm thêm giờ (OT), bạn chỉ cần gõ thêm vào ô tương ứng:
+
+Tăng ca sau 5h sáng 
+→ điền vào ô Tăng ca Ngày (150%).   
+image_41b2d4.jpg
+
+Tăng ca trong khung giờ đêm 
+→ điền vào ô Tăng ca Đêm (200%).   
+image_41b2d4.jpg
+
+Chủ Nhật Ca Đêm:
+
+Tự động tách thành 2.0 giờ Làm Ngày CN (200%) và 6.0 giờ Làm Đêm CN (250%).   
+image_41b2d4.jpg
+
+Nút "Điền tháng: Ca Đêm" một chạm:
+
+Ngay trên đầu giao diện lịch có thêm nút "Điền tháng: Ca Đêm (2h ngày + 6h đêm)". Bấm một lần là toàn bộ các ngày làm việc trong tháng (Thứ 2 đến Thứ 7) sẽ tự động được gán đủ 2h hành chính và 6h ca đêm.
+
+Khi bấm "Đồng Bộ Giờ Sang Bảng Lương", hệ thống sẽ cộng dồn chuẩn xác từng cột sang bảng tính tổng.
+
+Cách cập nhật trực tiếp trên GitHub để Vercel tự động build lại
+Tải file index.html mới ở trên về máy tính.
+
+Mở trình duyệt vào trang repository của bạn trên GitHub: [https://github.com/haibanhvinhtuy1111/salary-manager](https://github.com/haibanhvinhtuy1111/salary-manager).   
+image_419773.png
+
+Nhìn góc trên bên phải của danh sách file, bấm nút Add file 
+→ chọn Upload files.
+
+Kéo thả file index.html mới vào khung upload (GitHub sẽ tự động ghi đè lên file cũ).
+
+Kéo xuống dưới cùng và bấm nút xanh Commit changes.
+
+Vercel sẽ tự động phát hiện mã nguồn mới và cập nhật website của bạn trong vòng khoảng 10 giây.
+
+Bạn có muốn bổ sung thêm tính năng lưu ca xoay (tuần làm ngày, tuần làm đêm) tự động không?
+
+Có
+
+
+
+
+Gemini là một AI và có thể mắc sai sót.
+
+Calculating split night shift payroll
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -67,7 +553,7 @@
             </span>
           </div>
           <p class="text-xs text-slate-500 dark:text-slate-400">
-            Phạm Ngọc Hải (范玉海) • Quản lý Chấm công & Phiếu lương chuẩn Excel
+            Phạm Ngọc Hải (范玉海) • Bảng chấm công bóc tách Ca Ngày & Ca Đêm (20h-22h & 22h-5h)
           </p>
         </div>
       </div>
@@ -126,7 +612,7 @@
   <!-- Main Content -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
-    <!-- KPI Summary Cards (Always visible on top in no-print) -->
+    <!-- KPI Summary Cards -->
     <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 no-print">
       <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
         <div class="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -235,7 +721,7 @@
                   <i data-lucide="briefcase" class="w-5 h-5"></i>
                   Giờ Công Chính Thức (100% Đơn Giá)
                 </h2>
-                <p class="text-xs text-slate-500 mt-0.5">Nhập số giờ làm việc thực tế hoặc đồng bộ tự động từ tab Lịch Chấm Công</p>
+                <p class="text-xs text-slate-500 mt-0.5">Nhập số giờ hoặc đồng bộ tự động từ tab Lịch Chấm Công</p>
               </div>
               <span id="officialSubtotalBadge" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
                 10.024.038 ₫
@@ -253,7 +739,6 @@
                   </tr>
                 </thead>
                 <tbody id="officialHoursBody" class="divide-y divide-slate-100 dark:divide-slate-800/60">
-                  <!-- Populated by JS -->
                 </tbody>
               </table>
             </div>
@@ -281,7 +766,6 @@
                   </tr>
                 </thead>
                 <tbody id="probationHoursBody" class="divide-y divide-slate-100 dark:divide-slate-800/60">
-                  <!-- Populated by JS -->
                 </tbody>
               </table>
             </div>
@@ -290,7 +774,6 @@
 
         <!-- Right Column: Allowances, Deductions & Live Summary (5 cols) -->
         <div class="lg:col-span-5 space-y-6">
-          <!-- Allowances Card -->
           <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
             <div class="flex items-center justify-between mb-4">
               <h2 class="text-base font-bold flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
@@ -302,11 +785,9 @@
               </span>
             </div>
             <div id="allowancesBody" class="space-y-2.5">
-              <!-- Populated by JS -->
             </div>
           </div>
 
-          <!-- Deductions & Leave Balance Card -->
           <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
             <h2 class="text-base font-bold flex items-center gap-2 text-rose-600 dark:text-rose-400 mb-4">
               <i data-lucide="shield-alert" class="w-5 h-5"></i>
@@ -338,7 +819,6 @@
             </div>
           </div>
 
-          <!-- Total Net Sticky Box -->
           <div class="bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 text-white p-6 rounded-2xl shadow-xl">
             <div class="flex items-center justify-between mb-4">
               <span class="text-xs font-bold uppercase tracking-wider text-blue-300">Tổng Kết Thu Nhập Tháng</span>
@@ -384,12 +864,15 @@
               Bảng Chấm Công Chi Tiết Theo Ngày
             </h2>
             <p class="text-xs text-slate-500 mt-0.5">
-              Bấm vào từng ngày để ghi nhận ca làm việc và giờ tăng ca (OT). Nhấn <b>"Đồng bộ sang Bảng Lương"</b> để tự động cộng tổng giờ!
+              Hỗ trợ tự động bóc tách chuẩn: <b>Ca Đêm = 2h Ngày (20h-22h) + 6h Đêm (22h-5h)</b>. Bấm vào ngày để điều chỉnh hoặc dùng nút điền nhanh!
             </p>
           </div>
           <div class="flex flex-wrap gap-2">
-            <button onclick="quickFillStandardMonth()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-1.5">
-              <i data-lucide="wand-2" class="w-4 h-4 text-indigo-500"></i> Điền nhanh 8h/ngày (T2-T7)
+            <button onclick="quickFillFullMonth('day')" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-1.5">
+              <i data-lucide="sun" class="w-4 h-4 text-amber-500"></i> Điền tháng: Ca Ngày (8h)
+            </button>
+            <button onclick="quickFillFullMonth('night')" class="px-3 py-2 rounded-xl text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 transition flex items-center gap-1.5">
+              <i data-lucide="moon" class="w-4 h-4 text-indigo-500"></i> Điền tháng: Ca Đêm (2h ngày + 6h đêm)
             </button>
             <button onclick="syncCalendarToSalary()" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition flex items-center gap-1.5">
               <i data-lucide="refresh-cw" class="w-4 h-4"></i> Đồng Bộ Giờ Sang Bảng Lương
@@ -408,57 +891,124 @@
           <div class="py-1.5 text-blue-600">T7</div>
         </div>
         <div id="calendarGrid" class="grid grid-cols-7 gap-2">
-          <!-- Rendered by JS -->
         </div>
       </div>
 
-      <!-- Modal / Editor for Selected Day -->
+      <!-- Advanced Day Editor Modal -->
       <div id="dayEditorModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 id="modalDayTitle" class="text-base font-bold text-slate-900 dark:text-white">Chấm công ngày</h3>
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+            <div>
+              <h3 id="modalDayTitle" class="text-base font-bold text-slate-900 dark:text-white">Chấm công Ngày</h3>
+              <p class="text-xs text-slate-500" id="modalDaySubtitle">Chọn mẫu ca nhanh hoặc bóc tách chi tiết từng loại giờ</p>
+            </div>
             <button onclick="closeDayModal()" class="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
               <i data-lucide="x" class="w-5 h-5"></i>
             </button>
           </div>
 
-          <div class="space-y-3 text-sm">
-            <div>
-              <label class="block text-xs font-semibold text-slate-500 mb-1">Loại Ca / Trạng Thái Ngày</label>
-              <select id="modalShiftType" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-semibold">
-                <option value="day">Ca Ngày hành chính (8h-17h / 100%)</option>
-                <option value="night">Ca Đêm hành chính (22h-5h / 130%)</option>
-                <option value="sunday_day">Làm Ngày Chủ Nhật (200%)</option>
-                <option value="sunday_night">Làm Đêm Chủ Nhật (250%)</option>
-                <option value="holiday_day">Làm Ngày Lễ (300%)</option>
-                <option value="holiday_night">Làm Đêm Lễ (330%)</option>
-                <option value="paid_leave">Nghỉ phép có lương (100%)</option>
-                <option value="paid_holiday">Nghỉ Lễ hưởng lương (100%)</option>
-                <option value="leave_70">Nghỉ chờ việc hưởng 70%</option>
-                <option value="off">Nghỉ (Không tính công)</option>
-              </select>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-semibold text-slate-500 mb-1">Số giờ chuẩn trong ca</label>
-                <input type="number" id="modalRegHours" value="8" step="0.5" min="0" max="12" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-bold" />
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-slate-500 mb-1">Số giờ Tăng ca (OT)</label>
-                <input type="number" id="modalOtHours" value="0" step="0.5" min="0" max="12" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-bold text-amber-600" />
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-slate-500 mb-1">Ghi chú công việc</label>
-              <input type="text" id="modalNote" placeholder="VD: Tăng ca kiểm liệu SMT..." class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" />
+          <!-- Quick Shift Presets -->
+          <div>
+            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">MẪU CA NHANH (Click để tự động phân bổ giờ)</label>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <button type="button" onclick="applyPreset('day')" class="px-3 py-2 rounded-xl text-xs font-semibold border border-amber-300 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 hover:bg-amber-100 transition text-left">
+                ☀️ Ca Ngày<br/><span class="text-[10px] text-amber-600 font-normal">8h ngày 100%</span>
+              </button>
+              <button type="button" onclick="applyPreset('night')" class="px-3 py-2 rounded-xl text-xs font-semibold border border-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-200 hover:bg-indigo-100 transition text-left">
+                🌙 Ca Đêm Chuẩn<br/><span class="text-[10px] text-indigo-500 font-normal">2h ngày + 6h đêm</span>
+              </button>
+              <button type="button" onclick="applyPreset('sunday_day')" class="px-3 py-2 rounded-xl text-xs font-semibold border border-rose-300 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-200 hover:bg-rose-100 transition text-left">
+                📅 CN Ca Ngày<br/><span class="text-[10px] text-rose-600 font-normal">8h CN ngày 200%</span>
+              </button>
+              <button type="button" onclick="applyPreset('sunday_night')" class="px-3 py-2 rounded-xl text-xs font-semibold border border-purple-300 bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-200 hover:bg-purple-100 transition text-left">
+                🌌 CN Ca Đêm<br/><span class="text-[10px] text-purple-600 font-normal">2h CN + 6h đêm CN</span>
+              </button>
+              <button type="button" onclick="applyPreset('leave_paid')" class="px-3 py-2 rounded-xl text-xs font-semibold border border-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-100 transition text-left">
+                🌴 Nghỉ Phép<br/><span class="text-[10px] text-emerald-600 font-normal">8h phép 100%</span>
+              </button>
+              <button type="button" onclick="applyPreset('off')" class="px-3 py-2 rounded-xl text-xs font-semibold border border-slate-200 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition text-left">
+                ⛔ Nghỉ Không Công<br/><span class="text-[10px] text-slate-500 font-normal">0 giờ</span>
+              </button>
             </div>
           </div>
 
-          <div class="flex justify-end gap-2 pt-2">
-            <button onclick="closeDayModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800">Hủy</button>
-            <button onclick="saveDayAttendance()" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700">Lưu Ngày Này</button>
+          <!-- Detailed Breakdown Form -->
+          <div class="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div class="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-between">
+              <span>BÓC TÁCH CHI TIẾT SỐ GIỜ CÔNG TRONG NGÀY:</span>
+              <span id="modalTotalHoursBadge" class="text-blue-600 font-extrabold text-xs">Tổng: 8h</span>
+            </div>
+
+            <!-- Group: Ngày thường -->
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 space-y-2">
+              <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">1. Giờ Hành Chính & Tăng Ca Ngày Thường</span>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <label class="block text-slate-600 dark:text-slate-300 font-medium mb-1">Giờ Ngày (8h-17h & 20h-22h: 100%)</label>
+                  <input type="number" id="m_regDay" step="0.5" min="0" max="24" oninput="updateModalTotal()" class="w-full px-2.5 py-1.5 text-right font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
+                </div>
+                <div>
+                  <label class="block text-indigo-600 dark:text-indigo-300 font-semibold mb-1">Giờ Ca Đêm (22h-5h: 130%)</label>
+                  <input type="number" id="m_regNight" step="0.5" min="0" max="24" oninput="updateModalTotal()" class="w-full px-2.5 py-1.5 text-right font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-indigo-600" />
+                </div>
+                <div>
+                  <label class="block text-amber-600 dark:text-amber-400 font-medium mb-1">Tăng ca Ngày (150%)</label>
+                  <input type="number" id="m_otDay" step="0.5" min="0" max="24" oninput="updateModalTotal()" class="w-full px-2.5 py-1.5 text-right font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-amber-600" />
+                </div>
+                <div>
+                  <label class="block text-purple-600 dark:text-purple-400 font-medium mb-1">Tăng ca Đêm (200%)</label>
+                  <input type="number" id="m_otNight" step="0.5" min="0" max="24" oninput="updateModalTotal()" class="w-full px-2.5 py-1.5 text-right font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-purple-600" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Group: Chủ Nhật & Lễ & Phép (Collapse/Expand) -->
+            <details class="text-xs">
+              <summary class="cursor-pointer font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 py-1">
+                + Bấm để mở rộng: Giờ làm Chủ Nhật, Ngày Lễ, Nghỉ Phép
+              </summary>
+              <div class="grid grid-cols-2 gap-2 mt-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                <div>
+                  <label class="block text-slate-600 dark:text-slate-300 mb-1">Làm Ngày CN (200%)</label>
+                  <input type="number" id="m_sunDay" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right font-bold rounded border bg-white dark:bg-slate-800" />
+                </div>
+                <div>
+                  <label class="block text-slate-600 dark:text-slate-300 mb-1">Làm Đêm CN (250%)</label>
+                  <input type="number" id="m_sunNight" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right font-bold rounded border bg-white dark:bg-slate-800" />
+                </div>
+                <div>
+                  <label class="block text-slate-600 dark:text-slate-300 mb-1">Tăng ca Ngày CN (200%)</label>
+                  <input type="number" id="m_sunOtDay" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right font-bold rounded border bg-white dark:bg-slate-800" />
+                </div>
+                <div>
+                  <label class="block text-slate-600 dark:text-slate-300 mb-1">Tăng ca Đêm CN (270%)</label>
+                  <input type="number" id="m_sunOtNight" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right font-bold rounded border bg-white dark:bg-slate-800" />
+                </div>
+                <div>
+                  <label class="block text-slate-600 dark:text-slate-300 mb-1">Phép có lương (100%)</label>
+                  <input type="number" id="m_paidLeave" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right font-bold rounded border bg-white dark:bg-slate-800" />
+                </div>
+                <div>
+                  <label class="block text-slate-600 dark:text-slate-300 mb-1">Lễ hưởng lương (100%)</label>
+                  <input type="number" id="m_paidHoliday" step="0.5" min="0" oninput="updateModalTotal()" class="w-full px-2 py-1 text-right font-bold rounded border bg-white dark:bg-slate-800" />
+                </div>
+              </div>
+            </details>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1">Ghi chú ca làm (Tùy chọn)</label>
+              <input type="text" id="m_note" placeholder="VD: Ca đêm SMT, OT 2h..." class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" />
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-800">
+            <button type="button" onclick="clearCurrentDay()" class="text-xs text-rose-600 hover:underline font-semibold">
+              Xóa ngày này
+            </button>
+            <div class="flex gap-2">
+              <button onclick="closeDayModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800">Hủy</button>
+              <button onclick="saveDayAttendance()" class="px-5 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-sm">Lưu Ngày Này</button>
+            </div>
           </div>
         </div>
       </div>
@@ -469,14 +1019,13 @@
       <div class="flex justify-between items-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 no-print">
         <div>
           <h2 class="text-base font-bold">Mẫu Phiếu Lương Chuẩn CÔNG TY TNHH DOBEST</h2>
-          <p class="text-xs text-slate-500">Thiết kế đúng chuẩn từng dòng theo mẫu phiếu lương thực tế của công ty</p>
+          <p class="text-xs text-slate-500">Khớp từng dòng và công thức với phiếu lương thực tế của công ty</p>
         </div>
         <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-2 shadow">
           <i data-lucide="printer" class="w-4 h-4"></i> In Phiếu Lương / Xuất PDF
         </button>
       </div>
 
-      <!-- Exact Payslip Table -->
       <div id="printable-payslip" class="bg-white text-black max-w-xl mx-auto p-6 rounded-xl shadow-md border border-slate-300">
         <table class="w-full border-collapse border border-black text-xs">
           <thead>
@@ -510,7 +1059,6 @@
             </tr>
           </thead>
           <tbody id="ps-tableBody">
-            <!-- Rendered by JS -->
           </tbody>
         </table>
       </div>
@@ -519,7 +1067,6 @@
     <!-- TAB 4: ANALYTICS & GOAL PLANNER -->
     <section id="tab-analytics" class="hidden space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Income Structure Chart -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
           <h3 class="text-base font-bold mb-4 flex items-center gap-2">
             <i data-lucide="pie-chart" class="w-5 h-5 text-blue-600"></i>
@@ -530,7 +1077,6 @@
           </div>
         </div>
 
-        <!-- Goal Calculator -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
           <h3 class="text-base font-bold flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
             <i data-lucide="target" class="w-5 h-5"></i>
@@ -544,7 +1090,6 @@
             <input type="number" id="targetNetInput" value="15000000" step="500000" oninput="updateGoalPlanner()" class="w-full px-4 py-2.5 text-lg font-extrabold text-indigo-600 dark:text-indigo-400 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" />
           </div>
           <div id="goalResultBox" class="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-900 text-sm space-y-2">
-            <!-- Populated by JS -->
           </div>
         </div>
       </div>
@@ -553,7 +1098,6 @@
   </main>
 
   <script>
-    // --- CONFIGURATION MATCHING DOBEST PAYSLIP ---
     const OFFICIAL_ITEMS = [
       { key: 'regDay', label: 'Giờ hành chính ngày 8h-17h và 20h-22h: 100%', mult: 1.0, defaultHours: 184 },
       { key: 'regNight', label: 'Giờ hành chính ca đêm 22h-5h : 130%', mult: 1.3, defaultHours: 0 },
@@ -644,7 +1188,7 @@
     }
 
     function initApp() {
-      const saved = localStorage.getItem('DOBEST_SALARY_PRO_V1');
+      const saved = localStorage.getItem('DOBEST_SALARY_PRO_V2');
       if (saved) {
         try {
           state = JSON.parse(saved);
@@ -791,7 +1335,6 @@
       const totalDeductions = bhxhRounded + (rec.taxAmount || 0) + (rec.penaltyAmount || 0);
       const netRounded = grossRounded - totalDeductions;
 
-      // Calculate OT & Sunday hours/money
       const otKeys = ['otDay', 'otNight', 'sunDay', 'sunOtDay', 'sunNight', 'sunOtNight', 'holDay', 'holNight'];
       let otHours = 0;
       let otMoneyExact = 0;
@@ -830,23 +1373,20 @@
       rec.penaltyAmount = parseFloat(document.getElementById('penaltyAmount').value) || 0;
       rec.remainingLeave = parseFloat(document.getElementById('remainingLeave').value) || 0;
 
-      localStorage.setItem('DOBEST_SALARY_PRO_V1', JSON.stringify(state));
+      localStorage.setItem('DOBEST_SALARY_PRO_V2', JSON.stringify(state));
 
       const res = calculateMonth(rec);
 
-      // Update Official Rows
       res.officialBreakdown.forEach(b => {
         document.getElementById(`unit-${b.key}`).textContent = fmtNum(b.unitRounded);
         document.getElementById(`total-${b.key}`).textContent = b.hrs > 0 ? fmtVND(b.lineRounded) : '-';
       });
 
-      // Update Probation Rows
       res.probationBreakdown.forEach(b => {
         document.getElementById(`unit-${b.key}`).textContent = fmtNum(b.unitRounded);
         document.getElementById(`total-${b.key}`).textContent = b.hrs > 0 ? fmtVND(b.lineRounded) : '-';
       });
 
-      // Subtotals & Summary
       document.getElementById('officialSubtotalBadge').textContent = fmtVND(res.officialRounded);
       document.getElementById('probationSubtotalBadge').textContent = fmtVND(res.probationRounded);
       document.getElementById('allowanceSubtotalBadge').textContent = fmtVND(res.allowanceSum);
@@ -858,7 +1398,6 @@
       document.getElementById('sumDeductions').textContent = '- ' + fmtVND(res.totalDeductions);
       document.getElementById('sumNetSalary').textContent = fmtVND(res.netRounded);
 
-      // Top KPI Cards
       document.getElementById('kpi-net').textContent = fmtVND(res.netRounded);
       document.getElementById('kpi-net-sub').textContent = `Đã trừ BHXH & Khấu trừ: ${fmtVND(res.totalDeductions)}`;
       document.getElementById('kpi-gross').textContent = fmtVND(res.grossRounded);
@@ -990,11 +1529,11 @@
       document.getElementById('ps-tableBody').innerHTML = html;
     }
 
-    // --- CALENDAR LOGIC ---
+    // --- ENHANCED CALENDAR LOGIC WITH EXACT DOBEST SPLIT SHIFTS ---
     function renderCalendar() {
       const grid = document.getElementById('calendarGrid');
       const [yr, mo] = state.currentMonth.split('-').map(Number);
-      const firstDay = new Date(yr, mo - 1, 1).getDay(); // 0 = Sun
+      const firstDay = new Date(yr, mo - 1, 1).getDay();
       const daysInMonth = new Date(yr, mo, 0).getDate();
       const rec = state.monthsData[state.currentMonth];
       rec.calendarDays = rec.calendarDays || {};
@@ -1007,16 +1546,31 @@
       for (let d = 1; d <= daysInMonth; d++) {
         const dateObj = new Date(yr, mo - 1, d);
         const dow = dateObj.getDay();
-        const dayData = rec.calendarDays[d];
+        const dData = rec.calendarDays[d];
         let badge = '';
         let borderClass = 'border-slate-200 dark:border-slate-800';
 
-        if (dayData && dayData.shiftType !== 'off') {
-          borderClass = 'border-blue-400 dark:border-blue-600 bg-blue-50/40 dark:bg-blue-950/30';
-          const otBadge = dayData.otHours > 0 ? `<span class="block text-[10px] font-bold text-amber-600 dark:text-amber-400">+${dayData.otHours}h OT</span>` : '';
+        if (dData && hasWorkHours(dData)) {
+          if (dData.regNight > 0 || dData.sunNight > 0) {
+            borderClass = 'border-indigo-400 dark:border-indigo-600 bg-indigo-50/40 dark:bg-indigo-950/30';
+          } else {
+            borderClass = 'border-blue-400 dark:border-blue-600 bg-blue-50/40 dark:bg-blue-950/30';
+          }
+
+          let summaryArr = [];
+          if (dData.regDay > 0) summaryArr.push(`${dData.regDay}h ngày`);
+          if (dData.regNight > 0) summaryArr.push(`<span class="text-indigo-600 dark:text-indigo-400 font-bold">${dData.regNight}h đêm</span>`);
+          if (dData.sunDay > 0) summaryArr.push(`${dData.sunDay}h CN`);
+          if (dData.sunNight > 0) summaryArr.push(`${dData.sunNight}h đêm CN`);
+          if (dData.paidLeave > 0) summaryArr.push(`8h phép`);
+          if (dData.paidHoliday > 0) summaryArr.push(`8h lễ`);
+
+          let otTotal = (dData.otDay || 0) + (dData.otNight || 0) + (dData.sunOtDay || 0) + (dData.sunOtNight || 0);
+          let otBadge = otTotal > 0 ? `<div class="text-[10px] font-bold text-amber-600 dark:text-amber-400">+${otTotal}h OT</div>` : '';
+
           badge = `
-            <div class="mt-1 text-[11px] font-semibold text-blue-700 dark:text-blue-300 leading-tight">
-              ${dayData.regHours}h công
+            <div class="mt-1 text-[10px] leading-tight text-slate-700 dark:text-slate-300">
+              ${summaryArr.join(' + ') || 'Có công'}
               ${otBadge}
             </div>
           `;
@@ -1026,13 +1580,19 @@
           <button onclick="openDayModal(${d})" class="p-2 min-h-[76px] rounded-xl border ${borderClass} hover:border-blue-500 transition flex flex-col justify-between text-left bg-white dark:bg-slate-900 shadow-sm">
             <div class="flex justify-between items-center w-full">
               <span class="text-xs font-bold ${dow === 0 ? 'text-rose-500' : ''}">${d}</span>
-              ${dayData?.note ? '<span class="w-2 h-2 rounded-full bg-emerald-500" title="' + dayData.note + '"></span>' : ''}
+              ${dData?.note ? '<span class="w-2 h-2 rounded-full bg-emerald-500" title="' + dData.note + '"></span>' : ''}
             </div>
-            ${badge || '<span class="text-[10px] text-slate-400">Chưa chấm</span>'}
+            ${badge || '<span class="text-[10px] text-slate-400">Nghỉ / Chưa</span>'}
           </button>
         `;
       }
       grid.innerHTML = html;
+    }
+
+    function hasWorkHours(d) {
+      return (d.regDay || 0) > 0 || (d.regNight || 0) > 0 || (d.otDay || 0) > 0 || (d.otNight || 0) > 0 ||
+             (d.sunDay || 0) > 0 || (d.sunNight || 0) > 0 || (d.sunOtDay || 0) > 0 || (d.sunOtNight || 0) > 0 ||
+             (d.paidLeave || 0) > 0 || (d.paidHoliday || 0) > 0;
     }
 
     function openDayModal(day) {
@@ -1040,19 +1600,73 @@
       const [yr, mo] = state.currentMonth.split('-').map(Number);
       const dow = new Date(yr, mo - 1, day).getDay();
       const rec = state.monthsData[state.currentMonth];
-      const existing = rec.calendarDays[day] || {
-        shiftType: dow === 0 ? 'sunday_day' : 'day',
-        regHours: 8,
-        otHours: 0,
-        note: ''
-      };
+      const existing = rec.calendarDays[day] || {};
 
-      document.getElementById('modalDayTitle').textContent = `Chấm công Ngày ${day}/${mo}/${yr}`;
-      document.getElementById('modalShiftType').value = existing.shiftType;
-      document.getElementById('modalRegHours').value = existing.regHours;
-      document.getElementById('modalOtHours').value = existing.otHours;
-      document.getElementById('modalNote').value = existing.note || '';
+      document.getElementById('modalDayTitle').textContent = `Chấm công Ngày ${day}/${mo}/${yr} (${dow === 0 ? 'Chủ Nhật' : 'Thứ ' + (dow + 1)})`;
+
+      document.getElementById('m_regDay').value = existing.regDay ?? 0;
+      document.getElementById('m_regNight').value = existing.regNight ?? 0;
+      document.getElementById('m_otDay').value = existing.otDay ?? 0;
+      document.getElementById('m_otNight').value = existing.otNight ?? 0;
+      document.getElementById('m_sunDay').value = existing.sunDay ?? 0;
+      document.getElementById('m_sunNight').value = existing.sunNight ?? 0;
+      document.getElementById('m_sunOtDay').value = existing.sunOtDay ?? 0;
+      document.getElementById('m_sunOtNight').value = existing.sunOtNight ?? 0;
+      document.getElementById('m_paidLeave').value = existing.paidLeave ?? 0;
+      document.getElementById('m_paidHoliday').value = existing.paidHoliday ?? 0;
+      document.getElementById('m_note').value = existing.note || '';
+
+      updateModalTotal();
       document.getElementById('dayEditorModal').classList.remove('hidden');
+    }
+
+    function applyPreset(presetType) {
+      document.getElementById('m_regDay').value = 0;
+      document.getElementById('m_regNight').value = 0;
+      document.getElementById('m_otDay').value = 0;
+      document.getElementById('m_otNight').value = 0;
+      document.getElementById('m_sunDay').value = 0;
+      document.getElementById('m_sunNight').value = 0;
+      document.getElementById('m_sunOtDay').value = 0;
+      document.getElementById('m_sunOtNight').value = 0;
+      document.getElementById('m_paidLeave').value = 0;
+      document.getElementById('m_paidHoliday').value = 0;
+
+      if (presetType === 'day') {
+        document.getElementById('m_regDay').value = 8;
+      } else if (presetType === 'night') {
+        // EXACT DOBEST NIGHT SHIFT SPLIT:
+        // 20h - 22h = 2 hours ngày (100%)
+        // 22h - 05h = 6 hours ca đêm (130%)
+        document.getElementById('m_regDay').value = 2;
+        document.getElementById('m_regNight').value = 6;
+      } else if (presetType === 'sunday_day') {
+        document.getElementById('m_sunDay').value = 8;
+      } else if (presetType === 'sunday_night') {
+        document.getElementById('m_sunDay').value = 2;
+        document.getElementById('m_sunNight').value = 6;
+      } else if (presetType === 'leave_paid') {
+        document.getElementById('m_paidLeave').value = 8;
+      }
+      updateModalTotal();
+    }
+
+    function updateModalTotal() {
+      const keys = ['regDay', 'regNight', 'otDay', 'otNight', 'sunDay', 'sunNight', 'sunOtDay', 'sunOtNight', 'paidLeave', 'paidHoliday'];
+      let sum = 0;
+      keys.forEach(k => {
+        sum += (parseFloat(document.getElementById(`m_${k}`)?.value) || 0);
+      });
+      document.getElementById('modalTotalHoursBadge').textContent = `Tổng: ${sum.toFixed(1)}h`;
+    }
+
+    function clearCurrentDay() {
+      if (!selectedCalendarDay) return;
+      const rec = state.monthsData[state.currentMonth];
+      delete rec.calendarDays[selectedCalendarDay];
+      closeDayModal();
+      renderCalendar();
+      saveAndCalc();
     }
 
     function closeDayModal() {
@@ -1064,25 +1678,38 @@
       if (!selectedCalendarDay) return;
       const rec = state.monthsData[state.currentMonth];
       rec.calendarDays[selectedCalendarDay] = {
-        shiftType: document.getElementById('modalShiftType').value,
-        regHours: parseFloat(document.getElementById('modalRegHours').value) || 0,
-        otHours: parseFloat(document.getElementById('modalOtHours').value) || 0,
-        note: document.getElementById('modalNote').value.trim()
+        regDay: parseFloat(document.getElementById('m_regDay').value) || 0,
+        regNight: parseFloat(document.getElementById('m_regNight').value) || 0,
+        otDay: parseFloat(document.getElementById('m_otDay').value) || 0,
+        otNight: parseFloat(document.getElementById('m_otNight').value) || 0,
+        sunDay: parseFloat(document.getElementById('m_sunDay').value) || 0,
+        sunNight: parseFloat(document.getElementById('m_sunNight').value) || 0,
+        sunOtDay: parseFloat(document.getElementById('m_sunOtDay').value) || 0,
+        sunOtNight: parseFloat(document.getElementById('m_sunOtNight').value) || 0,
+        paidLeave: parseFloat(document.getElementById('m_paidLeave').value) || 0,
+        paidHoliday: parseFloat(document.getElementById('m_paidHoliday').value) || 0,
+        note: document.getElementById('m_note').value.trim()
       };
       closeDayModal();
       renderCalendar();
       saveAndCalc();
     }
 
-    function quickFillStandardMonth() {
+    function quickFillFullMonth(mode) {
       const [yr, mo] = state.currentMonth.split('-').map(Number);
       const daysInMonth = new Date(yr, mo, 0).getDate();
       const rec = state.monthsData[state.currentMonth];
-      rec.calendarDays = {};
+      rec.calendarDays = rec.calendarDays || {};
+
       for (let d = 1; d <= daysInMonth; d++) {
         const dow = new Date(yr, mo - 1, d).getDay();
-        if (dow !== 0) {
-          rec.calendarDays[d] = { shiftType: 'day', regHours: 8, otHours: 0, note: '' };
+        if (dow !== 0) { // Thứ 2 đến Thứ 7
+          if (mode === 'day') {
+            rec.calendarDays[d] = { regDay: 8, regNight: 0, otDay: 0, otNight: 0, sunDay: 0, sunNight: 0, sunOtDay: 0, sunOtNight: 0, paidLeave: 0, paidHoliday: 0, note: '' };
+          } else if (mode === 'night') {
+            // Tự động phân bổ đúng 2h ngày (20h-22h) + 6h đêm (22h-5h)
+            rec.calendarDays[d] = { regDay: 2, regNight: 6, otDay: 0, otNight: 0, sunDay: 0, sunNight: 0, sunOtDay: 0, sunOtNight: 0, paidLeave: 0, paidHoliday: 0, note: '' };
+          }
         }
       }
       renderCalendar();
@@ -1093,37 +1720,24 @@
       const rec = state.monthsData[state.currentMonth];
       const days = Object.values(rec.calendarDays || {});
       if (days.length === 0) {
-        alert('Bạn chưa chấm công ngày nào trên lịch! Hãy chấm công trên lịch trước khi đồng bộ.');
+        alert('Chưa có dữ liệu chấm công trên lịch! Hãy chấm công hoặc bấm Điền nhanh trước.');
         return;
       }
 
-      // Reset official hours before summing from calendar
+      // Reset hours before summing
       OFFICIAL_ITEMS.forEach(i => rec.officialHours[i.key] = 0);
 
       days.forEach(d => {
-        if (d.shiftType === 'day') {
-          rec.officialHours.regDay += d.regHours;
-          rec.officialHours.otDay += d.otHours;
-        } else if (d.shiftType === 'night') {
-          rec.officialHours.regNight += d.regHours;
-          rec.officialHours.otNight += d.otHours;
-        } else if (d.shiftType === 'sunday_day') {
-          rec.officialHours.sunDay += d.regHours;
-          rec.officialHours.sunOtDay += d.otHours;
-        } else if (d.shiftType === 'sunday_night') {
-          rec.officialHours.sunNight += d.regHours;
-          rec.officialHours.sunOtNight += d.otHours;
-        } else if (d.shiftType === 'holiday_day') {
-          rec.officialHours.holDay += (d.regHours + d.otHours);
-        } else if (d.shiftType === 'holiday_night') {
-          rec.officialHours.holNight += (d.regHours + d.otHours);
-        } else if (d.shiftType === 'paid_leave') {
-          rec.officialHours.paidLeave += d.regHours;
-        } else if (d.shiftType === 'paid_holiday') {
-          rec.officialHours.paidHoliday += d.regHours;
-        } else if (d.shiftType === 'leave_70') {
-          rec.officialHours.leave70 += d.regHours;
-        }
+        rec.officialHours.regDay += (d.regDay || 0);
+        rec.officialHours.regNight += (d.regNight || 0);
+        rec.officialHours.otDay += (d.otDay || 0);
+        rec.officialHours.otNight += (d.otNight || 0);
+        rec.officialHours.sunDay += (d.sunDay || 0);
+        rec.officialHours.sunNight += (d.sunNight || 0);
+        rec.officialHours.sunOtDay += (d.sunOtDay || 0);
+        rec.officialHours.sunOtNight += (d.sunOtNight || 0);
+        rec.officialHours.paidLeave += (d.paidLeave || 0);
+        rec.officialHours.paidHoliday += (d.paidHoliday || 0);
       });
 
       loadMonthToUI();
@@ -1131,7 +1745,6 @@
       switchTab('dashboard');
     }
 
-    // --- ANALYTICS & TARGET PLANNER ---
     function updateChartsAndAnalytics(rec, res) {
       updateGoalPlanner();
       const ctx = document.getElementById('incomePieChart');
@@ -1195,7 +1808,6 @@
       }
     }
 
-    // --- UTILITIES ---
     function switchTab(tabName) {
       ['dashboard', 'calendar', 'payslip', 'analytics'].forEach(t => {
         document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tabName);
@@ -1273,3 +1885,5 @@
   </script>
 </body>
 </html>
+index.html
+Đang hiển thị index.html.
